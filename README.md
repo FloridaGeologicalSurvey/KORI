@@ -1,6 +1,7 @@
 Readme for the FGS Karst Open Research Initiative
 
-Required Software:
+Required Software:  
+
 PostgreSQL 9.3.1
 
 Python 2.7.6
