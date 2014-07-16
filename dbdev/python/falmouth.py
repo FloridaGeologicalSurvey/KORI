@@ -116,7 +116,28 @@ def cast(data):
 
     return castData
 
-
+def classifyFalmouth(filePaths):
+    """
+    Classifies Falmouth files as either "A" or "B"
+    Use to prepare data to write to the dev_log table
+    Input is a list of file paths to the raw files.
+    Output is the nested list [[TypeA],[TypeB],[Unknown]]
+    """
+    typeA = ['AVN', 'AVE', 'ASPD', 'AVDIR', 'ATLT', 'TIME', 'DATE', 
+            'COND', 'TEMP', 'PRES', 'HDNG', 'BATT', 'VX', 'VY', 'TX', 
+            'TY', 'HX', 'HY', 'HZ', 'VN', 'VE', 'STEMP', 'SV', 'VAB', 
+            'VCD', 'VEF', 'VGH']
+            
+    typeB = ['AVN', 'AVE', 'ASPD', 'AVDIR', 'ATLT', 'TIME', 'DATE', 
+         'COND', 'TEMP', 'PRES', 'SALT', 'SV', 'HDNG', 'BATT', 
+         'VX', 'VY', 'TX', 'TY', 'HX', 'HY', 'HZ', 'VN', 'VE', 
+         'STEMP', 'SV', 'VAB', 'VCD', 'VEF', 'VGH']
+    
+    pathsTypeA = [f for f in filePaths if parse(f, "data header") == typeA ]
+    pathsTypeB = [f for f in filePaths if parse(f, "data header") == typeB ]
+    pathsTypeU = [f for f in filePaths if parse(f, "data header") != typeA and parse(f, "data header") != typeB]
+    returnList = [pathsTypeA, pathsTypeB, pathsTypeU]
+    return returnList
 ###############################################################################
 
 

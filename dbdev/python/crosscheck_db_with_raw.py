@@ -26,14 +26,18 @@ def invertDictionary(dictionary):
     return inverse
     
 import falmouth, os, datetime
-falmouthWorkspace = r"C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_Sorted_Sanitized_03-21-2014"
+#falmouthWorkspace = r"C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_Sorted_Sanitized_03-21-2014"
+dataWorkspace = r'C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_import_Run_20140428'
+
 outputWorkspace = r"C:\PythonWorkspace\falmouthCheck"
-alice = ["FGS-27951g1","wkp_seth","post_root","Fgs_rocks_g1"]
+pw = raw_input("Enter Password: ")
+alice = ["FGS-27951g1","wkp_hrdb","post_root",pw]
 timeRange = [datetime.datetime(2005, 1, 1, 0, 0, 0), datetime.datetime(2014, 1, 1, 0, 0, 0)]
 
 falmouthFiles = os.listdir(falmouthWorkspace)
 falmouthPaths = [os.path.join(falmouthWorkspace, i) for i in falmouthFiles]
 
+print "Classifying Raw Files"
 classedFalmouth = falmouth.classifyFalmouth(falmouthPaths)
 aFalmouth = classedFalmouth[0]
 bFalmouth = classedFalmouth [1]
@@ -43,11 +47,11 @@ del classedFalmouth
 
 #deployTableInfo = falmouth.retrieveColumnInfo(deploySQLquery, alice)
 #deployTableHeader = falmouth.retrieveColumnNames(deploySQLquery, alice)
-deploySQLquery = falmouth.buildSQLquery("*", "site_dev_deploy", "NONE")
+deploySQLquery = falmouth.buildSQLquery("*", "deploy_info", "NONE")
 deployTable = falmouth.retrieveRows(deploySQLquery, alice)
-deployTable = falmouth.parseDeployTable(deployTable)
 
-sqlQuery = falmouth.buildSQLquery("*", "dev_log", "NONE")
+
+sqlQuery = falmouth.buildSQLquery("*", "falmouth", "NONE")
 dbHeader = falmouth.retrieveColumnNames(sqlQuery, alice)
 
 dbDict = {}
@@ -66,26 +70,26 @@ for i in aFalmouth:
     rawStartEndDate = falmouth.parseDates(rawData)
     rawStartEndTimestamp = falmouth.parseTimestamps(rawData)
     rawSerial = falmouth.parse(i, "header")[0]
-    rawDeployInfo = [rawSerial, rawStartEndDate[0], rawStartEndDate[1]]
+    rawDeployInfo = [rawSerial, rawStartEndTimestamp[0], rawStartEndTimestamp[1]]
     for j in deployTable:
-        if rawDeployInfo[0] == j[0] and rawDeployInfo[1] >= j[1] and rawDeployInfo[2] <= j[2]:
-            deployKey = j[3]
+        if rawDeployInfo[0] == j[2] and rawDeployInfo[1] >= j[3] and rawDeployInfo[2] <= j[4]:
+            deployKey = j[1]
         else:
             pass
     rawData = falmouth.cast(rawData)
     dbData = falmouth.retrieveRange(rawStartEndTimestamp, deployKey, alice )
     if len(rawData)==len(dbData):
         print "Lengths match, proceeding"        
-
+    else: print "WARNING: Lengths do not match", os.path.split(i)[1]
 
     for j,x in zip(rawData, dbData):
         mismatchRow = []        
-        for k in range(len(j)):
-            colName = rawDict[k]
+        for v, k in enumerate(j):
+            colName = rawDict[v]
             dbPosition = dbInvDict[colName]
-            if k!= 21 and j[k] == x[dbPosition]:
+            if type(k) == float and k == float(x[dbPosition]):
                 pass
-            elif k == 21 and j[k] == float(x[dbPosition]):
+            elif type(k) == datetime.datetime and k == x[dbPosition]:
                 pass
             else:
                 mismatchRow.append(colName)
@@ -103,32 +107,85 @@ for i in bFalmouth:
     rawStartEndDate = falmouth.parseDates(rawData)
     rawStartEndTimestamp = falmouth.parseTimestamps(rawData)
     rawSerial = falmouth.parse(i, "header")[0]
-    rawDeployInfo = [rawSerial, rawStartEndDate[0], rawStartEndDate[1]]
+    rawDeployInfo = [rawSerial, rawStartEndTimestamp[0], rawStartEndTimestamp[1]]
     for j in deployTable:
-        if rawDeployInfo[0] == j[0] and rawDeployInfo[1] >= j[1] and rawDeployInfo[2] <= j[2]:
-            deployKey = j[3]
+        if rawDeployInfo[0] == j[2] and rawDeployInfo[1] >= j[3] and rawDeployInfo[2] <= j[4]:
+            deployKey = j[1]
         else:
             pass
     rawData = falmouth.cast(rawData)
     dbData = falmouth.retrieveRange(rawStartEndTimestamp, deployKey, alice )
-    dbData = sorted(dbData, key = lambda datetime: datetime[5])
+    dbData = sorted(dbData, key = lambda datetime: datetime[2])
     if len(rawData)==len(dbData):
-        print "Lengths match, proceeding"        
+        print "Lengths match, proceeding"
+    else: print "WARNING: Lengths do not match", os.path.split(i)[1]
 
 
     for j,x in zip(rawData, dbData):
         mismatchRow = []        
-        for k in range(len(j)):
-            colName = rawDict[k]
+        for v, k in enumerate(j):
+            colName = rawDict[v]
             dbPosition = dbInvDict[colName]
-            if (k!= 10 or k!=23) and j[k] == x[dbPosition]:
+            if type(k) == float and k == float(x[dbPosition]):
                 pass
-            elif (k == 10 or k==23) and j[k] == float(x[dbPosition]):
+            elif type(k) == datetime.datetime and k == x[dbPosition]:
                 pass
             else:
                 mismatchRow.append(colName)
+                print colName, j[v], x[dbPosition]
         mismatchRow = list(set(mismatchRow))
-    mismatchListB.append([i, [item for item in mismatchRow]])     
+    mismatchListB.append([i, [item for item in mismatchRow]])
+
+for i in mismatchListA:
+    if len(i[1]) > 0:
+        print i[0], "\n", i[1]
+for i in mismatchListB:
+    if len(i[1]) > 0:
+        print i[0], "\n", i[1]
+##########################################
+"""
+mismatchListC = []
+for i in mismatchListB:
+    if len(i[1]) > 0:
+        mismatchListC.append(i[0])
+
+for i in mismatchListC:
+    rawData = falmouth.parse(i, 'data')
+    rawHeader = falmouth.parse(i, 'data header')
+    rawDict = buildRawDictB(rawHeader)
+    rawInvDict = invertDictionary(rawDict)
+    rawStartEndDate = falmouth.parseDates(rawData)
+    rawStartEndTimestamp = falmouth.parseTimestamps(rawData)
+    rawSerial = falmouth.parse(i, "header")[0]
+    rawDeployInfo = [rawSerial, rawStartEndTimestamp[0], rawStartEndTimestamp[1]]
+    for j in deployTable:
+        if rawDeployInfo[0] == j[2] and rawDeployInfo[1] >= j[3] and rawDeployInfo[2] <= j[4]:
+            deployKey = j[1]
+        else:
+            pass
+    rawData = falmouth.cast(rawData)
+    dbData = falmouth.retrieveRange(rawStartEndTimestamp, deployKey, alice )
+    dbData = sorted(dbData, key = lambda datetime: datetime[2])
+    if len(rawData)==len(dbData):
+        print os.path.split(i)[1],"lengths match, proceeding"
+    else: print "WARNING: Lengths do not match"
+
+
+    for j,x in zip(rawData, dbData):
+        mismatchRow = []        
+        for v, k in enumerate(j):
+            colName = rawDict[v]
+            dbPosition = dbInvDict[colName]
+            if type(k) == float and k == float(x[dbPosition]):
+                pass
+            elif type(k) == datetime.datetime and k == x[dbPosition]:
+                pass
+            else:
+                mismatchRow.append(colName)
+                print colName, j[v], x[dbPosition]
+        #mismatchRow = list(set(mismatchRow))
+    #mismatchListB.append([i, [item for item in mismatchRow]]) 
+"""
 #for j,x in zip(rawData[0:1], dbData[0:1]):
 #    mismatchRow = []        
 #    for k in range(len(j)):

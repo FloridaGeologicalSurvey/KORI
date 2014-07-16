@@ -6,12 +6,20 @@ Created on Tue Jul 15 16:34:29 2014
 """
 
 import os, falmouth
+
+#workspace that holds the raw files
 #dataWorkspace = r"C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_Sorted_Sanitized_03-21-2014"
 dataWorkspace = r'C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_import_Run_20140428'
+
+
 pw = raw_input("Enter DB password: ")
+
+
 alice = ["FGS-27951g1","wkp_hrdb","post_root",pw]
 
 ######################    Constants  ###########################################
+#this is the ordered headers for the two types of Falmouth files
+
 typeB = ['AVN', 'AVE', 'ASPD', 'AVDIR', 'ATLT', 'TIME', 'DATE', 
          'COND', 'TEMP', 'PRES', 'SALT', 'SV', 'HDNG', 'BATT', 
          'VX', 'VY', 'TX', 'TY', 'HX', 'HY', 'HZ', 'VN', 'VE', 
@@ -22,6 +30,8 @@ typeA = ['AVN', 'AVE', 'ASPD', 'AVDIR', 'ATLT', 'TIME', 'DATE',
         'TY', 'HX', 'HY', 'HZ', 'VN', 'VE', 'STEMP', 'SV', 'VAB', 
         'VCD', 'VEF', 'VGH']
 ##############################################################################
+
+#parse raw files and build list of Type A, Type B, and Type U (unknown)
 print "Building Type Tables"     
 files = os.listdir(dataWorkspace)
 filePaths = [os.path.join(dataWorkspace, f) for f in files]
@@ -29,6 +39,7 @@ pathsTypeA = [f for f in filePaths if falmouth.parse(f, "data header") == typeA 
 pathsTypeB = [f for f in filePaths if falmouth.parse(f, "data header") == typeB ]
 pathsTypeU = [f for f in filePaths if falmouth.parse(f, "data header") != typeA and falmouth.parse(f, "data header") != typeB]
 
+#query the DB for the deploy table
 print "Fetching Deploy Table"
 deploySQLquery = falmouth.buildSQLquery("*", "deploy_info", "NONE")
 deployTableInfo = falmouth.retrieveColumnNames(deploySQLquery, alice)
@@ -36,6 +47,7 @@ deployTable = falmouth.retrieveRows(deploySQLquery, alice)
 print "Success"
 print "\n"
 
+#Build a report list, which identifies each raw file's appropriate deploy key
 print "-"*60
 reportListA = []
 print "Generating Report List For Type A"
@@ -64,6 +76,8 @@ print "Success"
 print "-"*60
 print "\n"
 
+
+#write to database
 print "*"*60
 print "\n"
 print "Writing Falmouth Data for Type A"

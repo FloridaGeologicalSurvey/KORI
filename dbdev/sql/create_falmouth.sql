@@ -24,7 +24,7 @@ CREATE TABLE falmouth
   ve NUMERIC(5,2),
   stemp NUMERIC(4,2),
   sv1 NUMERIC(8,2),
-  sv2 NUMERIC(6,2),
+  sv2 NUMERIC(6,4),
   vab NUMERIC(5,2),
   vcd NUMERIC(5,2),
   vef NUMERIC(5,2),
