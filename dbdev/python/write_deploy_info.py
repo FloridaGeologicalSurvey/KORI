@@ -5,12 +5,12 @@ Created on Tue Jul 15 11:47:13 2014
 @author: Bassett_S
 """
 
-import datetime, falmouth, psycopg2, psycopg2.extras
+import falmouth, psycopg2, psycopg2.extras, os
 from operator import itemgetter
 
 pw = raw_input("Enter DB password: ")
 dataWorkspace = r"C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_Sorted_Sanitized_03-21-2014"
-connection_info = ["FGS-27951g1","wkp_hrdb","post_root", pw]
+connection_info = ["FGS-27951g1","wkp_hrdb_dev","post_root", pw]
 
 
 print "listing directory"

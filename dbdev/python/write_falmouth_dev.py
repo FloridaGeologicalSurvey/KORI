@@ -6,6 +6,7 @@ Created on Tue Jul 15 16:34:29 2014
 """
 
 import os
+#import falmouth
 import falmouth_dev as falmouth
 
 #workspace that holds the raw files
@@ -39,6 +40,8 @@ filePaths = [os.path.join(dataWorkspace, f) for f in files]
 pathsTypeA = [f for f in filePaths if falmouth.parse(f, "data header") == typeA ]
 pathsTypeB = [f for f in filePaths if falmouth.parse(f, "data header") == typeB ]
 pathsTypeU = [f for f in filePaths if falmouth.parse(f, "data header") != typeA and falmouth.parse(f, "data header") != typeB]
+
+
 
 #query the DB for the deploy table
 print "Fetching Deploy Table"
