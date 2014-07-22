@@ -2,7 +2,7 @@ CREATE TABLE falmouth
 (
   falmouth_id SERIAL CONSTRAINT falmouth_key PRIMARY KEY, 
   deploy_key INTEGER REFERENCES deploy_info (deploy_key), 
-  date_time timestamp without time zone, 
+  date_time timestamp with time zone, 
   avn NUMERIC(5, 2),
   ave NUMERIC(5,2),
   aspd NUMERIC(6,3),
@@ -24,7 +24,7 @@ CREATE TABLE falmouth
   ve NUMERIC(5,2),
   stemp NUMERIC(4,2),
   sv1 NUMERIC(8,2),
-  sv2 NUMERIC(6,4),
+  sv2 NUMERIC(8,4),
   vab NUMERIC(5,2),
   vcd NUMERIC(5,2),
   vef NUMERIC(5,2),
@@ -39,7 +39,7 @@ COMMENT ON TABLE falmouth
   IS 'FGS Falmouth 2D-ACM Deep Network sensor data';
 COMMENT ON COLUMN falmouth.falmouth_id IS 'table PK';
 COMMENT ON COLUMN falmouth.deploy_key IS 'Deploy Key, foreign key from deploy_info table';
-COMMENT ON COLUMN falmouth.date_time IS 'Timestamp of observation, no DST adjustments';
+COMMENT ON COLUMN falmouth.date_time IS 'Timestamp of observation, UTC';
 COMMENT ON COLUMN falmouth.avn IS 'Vector averaged north current velocity in cm/sec';
 COMMENT ON COLUMN falmouth.ave IS 'Vector averaged east current velocity in cm/sec';
 COMMENT ON COLUMN falmouth.aspd IS 'Calculated vector averaged current speed in cm/sec';

@@ -6,7 +6,7 @@ Created on Tue Jul 15 16:34:29 2014
 """
 
 import os
-import falmouth_dev as falmouth
+import falmouth
 
 #workspace that holds the raw files
 #dataWorkspace = r"C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_Sorted_Sanitized_03-21-2014"
@@ -16,7 +16,7 @@ dataWorkspace = r'C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_im
 pw = raw_input("Enter DB password: ")
 
 
-alice = ["FGS-27951g1","wkp_hrdb_dev","post_root",pw]
+alice = ["FGS-27951g1","wkp_hrdb","post_root",pw]
 
 ######################    Constants  ###########################################
 #this is the ordered headers for the two types of Falmouth files
@@ -56,8 +56,9 @@ for f in pathsTypeA:
     sensorData = falmouth.parse(f, "data")
     sensorSerial = falmouth.parse(f, "header")[0] 
     sensorStartEnd = falmouth.parseTimestamps(sensorData)
+    utcStartEnd = [falmouth.est2utc(j) for j in sensorStartEnd]
     for i in deployTable:
-        if i[2] == sensorSerial and i[3] <= sensorStartEnd[0] and i[4] >= sensorStartEnd[1]:
+        if i[2] == sensorSerial and i[3].replace(tzinfo=None) <= utcStartEnd[0] and i[4].replace(tzinfo=None) >= utcStartEnd[1]:
             reportListA.append([f, i[1]])
 print "Success"
 print "-"*60
@@ -70,8 +71,9 @@ for f in pathsTypeB:
     sensorData = falmouth.parse(f, "data")
     sensorSerial = falmouth.parse(f, "header")[0] 
     sensorStartEnd = falmouth.parseTimestamps(sensorData)
+    utcStartEnd = [falmouth.est2utc(j) for j in sensorStartEnd]
     for i in deployTable:
-        if i[2] == sensorSerial and i[3] <= sensorStartEnd[0] and i[4] >= sensorStartEnd[1]:
+        if i[2] == sensorSerial and i[3].replace(tzinfo=None) <= utcStartEnd[0] and i[4].replace(tzinfo=None) >= utcStartEnd[1]:
             reportListB.append([f, i[1]])
 print "Success"
 print "-"*60

@@ -210,25 +210,16 @@ def pandizeDBordinal(dbData):
 ###############################################################################
 
 ###################   SQL OPERATIONS ##########################################
-def tzcast(data):
+def est2utc(timestamp):
     """
     Casts Falmouth Data into proper types
     """
-    newData = []
-    for i in data:
-        newRow = []
-        for v, j in enumerate(i):
-            if v != 5:
-                newRow.append(float(j))
-            elif v == 5 and j != '255:255:255 255-255-65535':
-                time = j.split(" ")
-                date = time[1].split("-")
-                newDate = date[2] + "-" + date[0] + "-" + date[1]
-                newRow.append(newDate + " " + time[0] + "-5")
-            elif v == 5 and j == '255:255:255 255-255-65535':
-                pass
-        newData.append(newRow)
-    return newData
+    utc = timestamp + datetime.timedelta(hours=5)
+    return utc
+
+def edt2utc(timestamp):
+    utc = timestamp + datetime.timedelta(hours=4)
+    return utc
 
 def writeFalmouthDataTypeB(falmouthFile, deploy_key, connection_info):
     #establish connection and cursor    
@@ -238,12 +229,12 @@ def writeFalmouthDataTypeB(falmouthFile, deploy_key, connection_info):
         user= connection_info[2],
         password= connection_info[3])
 
-    cur = con.cursor()      
+    cur = con.cursor()
+    cur.execute('SET SESSION TIME ZONE UTC')
     dataBlock = parse(falmouthFile, "data")
     startEnd = parseTimestamps(dataBlock)
-    
     #query the database to see if the datetime range for the current file and deploy key already exists in the database
-    sqlQuery = cur.mogrify("SELECT * FROM falmouth WHERE deploy_key = %s AND (date_time BETWEEN %s AND %s);", (deploy_key, startEnd[0], startEnd[1]))
+    sqlQuery = cur.mogrify("SELECT * FROM falmouth WHERE deploy_key = %s AND (date_time BETWEEN %s AND %s);", (deploy_key, est2utc(startEnd[0]), est2utc(startEnd[1])))
     rows = retrieveRows(sqlQuery, connection_info)
     
     #only add rows if SQL query returns null, otherwise print filename to console
@@ -256,9 +247,10 @@ def writeFalmouthDataTypeB(falmouthFile, deploy_key, connection_info):
             print "Error Casting", falmouthFile, "--------- SKIPPING"
             return
         for i in castBlock:
+            utcTime = est2utc(i[5]).strftime("%Y-%m-%d %H:%M:%S UTC")
             cur.execute("""INSERT INTO falmouth (avn, ave, aspd, avdir, atlt, date_time, cond, temp, pres, salt, sv2, hdng, batt, vx, vy, tx, ty, hx, hy, hz, vn, ve, stemp, sv1, vab, vcd, vef, vgh, deploy_key)
                         values(%(avn)s, %(ave)s, %(aspd)s, %(avdir)s, %(atlt)s, %(date_time)s, %(cond)s, %(temp)s, %(pres)s, %(salt)s, %(sv2)s, %(hdng)s, %(batt)s, %(vx)s, %(vy)s, %(tx)s, %(ty)s, %(hx)s, %(hy)s, %(hz)s, %(vn)s, %(ve)s, %(stemp)s, %(sv1)s, %(vab)s, %(vcd)s, %(vef)s, %(vgh)s, %(key)s);""",
-                        {'avn':i[0], 'ave':i[1], 'aspd':i[2], 'avdir':i[3], 'atlt':i[4], 'date_time':i[5], 'cond':i[6], 'temp':i[7], 'pres':i[8], 'salt':i[9], 'sv2':i[10], 'hdng':i[11], 'batt':i[12], 'vx':i[13], 'vy':i[14], 'tx':i[15], 'ty':i[16], 'hx':i[17], 'hy':i[18], 'hz':i[19], 'vn':i[20], 've':i[21], 'stemp':i[22], 'sv1':i[23], 'vab':i[24], 'vcd':i[25], 'vef':i[26], 'vgh':i[27], 'key': deploy_key})
+                        {'avn':i[0], 'ave':i[1], 'aspd':i[2], 'avdir':i[3], 'atlt':i[4], 'date_time':utcTime, 'cond':i[6], 'temp':i[7], 'pres':i[8], 'salt':i[9], 'sv2':i[10], 'hdng':i[11], 'batt':i[12], 'vx':i[13], 'vy':i[14], 'tx':i[15], 'ty':i[16], 'hx':i[17], 'hy':i[18], 'hz':i[19], 'vn':i[20], 've':i[21], 'stemp':i[22], 'sv1':i[23], 'vab':i[24], 'vcd':i[25], 'vef':i[26], 'vgh':i[27], 'key': deploy_key})
         con.commit()
         print falmouthFile, 'written successfully with', len(castBlock), 'rows'
     else:
@@ -278,12 +270,13 @@ def writeFalmouthDataTypeA(falmouthFile, deploy_key, connection_info):
         user= connection_info[2],
         password= connection_info[3])
 
-    cur = con.cursor()      
+    cur = con.cursor()
+    cur.execute('SET SESSION TIME ZONE UTC')
     dataBlock = parse(falmouthFile, "data")
     startEnd = parseTimestamps(dataBlock)
     
     #query the database to see if the datetime range for the current file and deploy key already exists in the database
-    sqlQuery = cur.mogrify("SELECT * FROM falmouth WHERE deploy_key = %s AND (date_time BETWEEN %s AND %s);", (deploy_key, startEnd[0], startEnd[1]))
+    sqlQuery = cur.mogrify("SELECT * FROM falmouth WHERE deploy_key = %s AND (date_time BETWEEN %s AND %s);", (deploy_key, est2utc(startEnd[0]), est2utc(startEnd[1])))
     rows = retrieveRows(sqlQuery, connection_info)
 
     #only add rows if SQL query returns null, otherwise print filename to console
@@ -296,9 +289,10 @@ def writeFalmouthDataTypeA(falmouthFile, deploy_key, connection_info):
             print "Error Casting", falmouthFile, "--------- SKIPPING"
             return
         for i in castBlock:
+            utcTime = est2utc(i[5]).strftime("%Y-%m-%d %H:%M:%S UTC")
             cur.execute("""INSERT INTO falmouth (avn, ave, aspd, avdir, atlt, date_time, cond, temp, pres, hdng, batt, vx, vy, tx, ty, hx, hy, hz, vn, ve, stemp, sv1, vab, vcd, vef, vgh, deploy_key)
             values(%(avn)s, %(ave)s, %(aspd)s, %(avdir)s, %(atlt)s, %(date_time)s, %(cond)s, %(temp)s, %(pres)s, %(hdng)s, %(batt)s, %(vx)s, %(vy)s, %(tx)s, %(ty)s, %(hx)s, %(hy)s, %(hz)s, %(vn)s, %(ve)s, %(stemp)s, %(sv1)s, %(vab)s, %(vcd)s, %(vef)s, %(vgh)s, %(key)s);""",
-                        {'avn':i[0], 'ave':i[1], 'aspd':i[2], 'avdir':i[3], 'atlt':i[4], 'date_time':i[5], 'cond':i[6], 'temp':i[7], 'pres':i[8], 'hdng':i[9], 'batt':i[10], 'vx':i[11], 'vy':i[12], 'tx':i[13], 'ty':i[14], 'hx':i[15], 'hy':i[16], 'hz':i[17], 'vn':i[18], 've':i[19], 'stemp':i[20], 'sv1':i[21], 'vab':i[22], 'vcd':i[23], 'vef':i[24], 'vgh':i[25], 'key': deploy_key})
+                        {'avn':i[0], 'ave':i[1], 'aspd':i[2], 'avdir':i[3], 'atlt':i[4], 'date_time':utcTime, 'cond':i[6], 'temp':i[7], 'pres':i[8], 'hdng':i[9], 'batt':i[10], 'vx':i[11], 'vy':i[12], 'tx':i[13], 'ty':i[14], 'hx':i[15], 'hy':i[16], 'hz':i[17], 'vn':i[18], 've':i[19], 'stemp':i[20], 'sv1':i[21], 'vab':i[22], 'vcd':i[23], 'vef':i[24], 'vgh':i[25], 'key': deploy_key})
         con.commit()
         print falmouthFile, 'written successfully with', len(castBlock), 'rows'
     else:
@@ -319,7 +313,7 @@ def retrieveColumnNames(sqlQuery, connection_info):
 
 	#establish dictionary database cursor to read DB
     cur = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
+    cur.execute("SET SESSION TIME ZONE UTC")
 	#set SQL query to run against DB tables
     cur.execute(sqlQuery)
 
@@ -364,7 +358,7 @@ def retrieveRows(sqlQuery, connection_info):
 
 	#establish dictionary database cursor to read DB
     cur = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
+    cur.execute("SET SESSION TIME ZONE UTC")
 	#set SQL query to run against DB tables
     cur.execute(sqlQuery)
 

@@ -7,8 +7,8 @@ CREATE TABLE deploy_info
   site_id VARCHAR, -- Site ID Name
   deploy_key integer NOT NULL DEFAULT nextval('deploy_key_seq'::regclass), -- Deploy Key. DB Primary Key.
   serial_number VARCHAR, -- Serial Number of Device
-  start_dt timestamp without time zone, -- Start Timestamp of Deployment
-  end_dt timestamp without time zone, -- End timestamp of deployment
+  start_dt timestamp with time zone, -- Start Timestamp of Deployment
+  end_dt timestamp with time zone, -- End timestamp of deployment
   active boolean, -- Is device currently active?
   device_type VARCHAR,
   network VARCHAR,

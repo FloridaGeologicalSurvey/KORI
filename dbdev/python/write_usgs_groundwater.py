@@ -15,7 +15,7 @@ con = psycopg2.connect(dsn=None,
     user= connection_info[2],
     password= connection_info[3])
 
-cur = con.cursor() 
+cur = con.cursor()
 
 importFile = r"C:\GISData\WKP Data\Flat Data\USGS Station Data\GW_Crawfordville_2007-10-01_2014-04-11.txt"
 with open(importFile, 'rb') as csvfile:

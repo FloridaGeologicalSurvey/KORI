@@ -26,8 +26,8 @@ def invertDictionary(dictionary):
     return inverse
     
 import falmouth, os, datetime
-#falmouthWorkspace = r"C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_Sorted_Sanitized_03-21-2014"
-dataWorkspace = r'C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_import_Run_20140428'
+falmouthWorkspace = r"C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_Sorted_Sanitized_03-21-2014"
+#falmouthWorkspace = r'C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_import_Run_20140428'
 
 outputWorkspace = r"C:\PythonWorkspace\falmouthCheck"
 pw = raw_input("Enter Password: ")
@@ -49,7 +49,19 @@ del classedFalmouth
 #deployTableHeader = falmouth.retrieveColumnNames(deploySQLquery, alice)
 deploySQLquery = falmouth.buildSQLquery("*", "deploy_info", "NONE")
 deployTable = falmouth.retrieveRows(deploySQLquery, alice)
+deployTable2 = []
+for i in deployTable:
+    newRow = []
+    for v, j in enumerate(i):
+        if v == 3 or v==4:
+            newRow.append(j.replace(tzinfo=None))
+        else:
+            newRow.append(j)
+    deployTable2.append(newRow)
 
+deployTable = deployTable2
+del deployTable2
+           
 
 sqlQuery = falmouth.buildSQLquery("*", "falmouth", "NONE")
 dbHeader = falmouth.retrieveColumnNames(sqlQuery, alice)
@@ -70,14 +82,15 @@ for i in aFalmouth:
     rawStartEndDate = falmouth.parseDates(rawData)
     rawStartEndTimestamp = falmouth.parseTimestamps(rawData)
     rawSerial = falmouth.parse(i, "header")[0]
-    rawDeployInfo = [rawSerial, rawStartEndTimestamp[0], rawStartEndTimestamp[1]]
+    utcTimestamp = [falmouth.est2utc(w) for w in rawStartEndTimestamp]
+    rawDeployInfo = [rawSerial, utcTimestamp[0], utcTimestamp[1]]
     for j in deployTable:
         if rawDeployInfo[0] == j[2] and rawDeployInfo[1] >= j[3] and rawDeployInfo[2] <= j[4]:
             deployKey = j[1]
         else:
             pass
     rawData = falmouth.cast(rawData)
-    dbData = falmouth.retrieveRange(rawStartEndTimestamp, deployKey, alice )
+    dbData = falmouth.retrieveRange(utcTimestamp, deployKey, alice )
     if len(rawData)==len(dbData):
         print "Lengths match, proceeding"        
     else: print "WARNING: Lengths do not match", os.path.split(i)[1]
@@ -89,7 +102,7 @@ for i in aFalmouth:
             dbPosition = dbInvDict[colName]
             if type(k) == float and k == float(x[dbPosition]):
                 pass
-            elif type(k) == datetime.datetime and k == x[dbPosition]:
+            elif type(k) == datetime.datetime and falmouth.est2utc(k) == x[dbPosition].replace(tzinfo=None):
                 pass
             else:
                 mismatchRow.append(colName)
@@ -107,14 +120,15 @@ for i in bFalmouth:
     rawStartEndDate = falmouth.parseDates(rawData)
     rawStartEndTimestamp = falmouth.parseTimestamps(rawData)
     rawSerial = falmouth.parse(i, "header")[0]
-    rawDeployInfo = [rawSerial, rawStartEndTimestamp[0], rawStartEndTimestamp[1]]
+    utcTimestamp = [falmouth.est2utc(w) for w in rawStartEndTimestamp]
+    rawDeployInfo = [rawSerial, utcTimestamp[0], utcTimestamp[1]]
     for j in deployTable:
         if rawDeployInfo[0] == j[2] and rawDeployInfo[1] >= j[3] and rawDeployInfo[2] <= j[4]:
             deployKey = j[1]
         else:
             pass
     rawData = falmouth.cast(rawData)
-    dbData = falmouth.retrieveRange(rawStartEndTimestamp, deployKey, alice )
+    dbData = falmouth.retrieveRange(utcTimestamp, deployKey, alice )
     dbData = sorted(dbData, key = lambda datetime: datetime[2])
     if len(rawData)==len(dbData):
         print "Lengths match, proceeding"
@@ -128,11 +142,10 @@ for i in bFalmouth:
             dbPosition = dbInvDict[colName]
             if type(k) == float and k == float(x[dbPosition]):
                 pass
-            elif type(k) == datetime.datetime and k == x[dbPosition]:
+            elif type(k) == datetime.datetime and falmouth.est2utc(k) == x[dbPosition].replace(tzinfo=None):
                 pass
             else:
                 mismatchRow.append(colName)
-                print colName, j[v], x[dbPosition]
         mismatchRow = list(set(mismatchRow))
     mismatchListB.append([i, [item for item in mismatchRow]])
 

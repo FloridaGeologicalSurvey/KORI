@@ -10,7 +10,7 @@ from operator import itemgetter
 
 pw = raw_input("Enter DB password: ")
 dataWorkspace = r"C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_Sorted_Sanitized_03-21-2014"
-connection_info = ["FGS-27951g1","wkp_hrdb_dev","post_root", pw]
+connection_info = ["FGS-27951g1","wkp_hrdb","post_root", pw]
 
 
 print "listing directory"
@@ -63,10 +63,12 @@ cur = con.cursor()
 dev_type='Falmouth 2D-ACM'
 net_type = 'Deep'
 
-for i in masterAll:   
+for i in masterAll:
+    utcStartTime = falmouth.est2utc(i[1]).strftime("%Y-%m-%d %H:%M:%S UTC")
+    utcEndTime = falmouth.est2utc(i[2]).strftime("%Y-%m-%d %H:%M:%S UTC")
     cur.execute("""INSERT INTO deploy_info (site_id, serial_number, start_dt, end_dt, device_type, network)
                             values(%(site_id)s, %(serial_number)s, %(start_dt)s, %(end_dt)s, %(device_type)s, %(network)s);""",
-                            {'site_id':i[0][0], 'serial_number':i[0][1], 'start_dt':i[1], 'end_dt':i[2], 'device_type':dev_type, 'network':net_type})
+                            {'site_id':i[0][0], 'serial_number':i[0][1], 'start_dt':utcStartTime, 'end_dt':utcEndTime, 'device_type':dev_type, 'network':net_type})
     con.commit()
 cur.close()
 con.close()
