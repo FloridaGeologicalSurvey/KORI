@@ -11,7 +11,7 @@
 { "type": "Feature", "properties": { "Name": "AD Tunnel" }, "geometry": { "type": "Point", "coordinates": [ -84.304798150147633, 30.228408117065293 ] } },
 { "type": "Feature", "properties": { "Name": "Vent" }, "geometry": { "type": "Point", "coordinates": [ -84.302665765508948, 30.235274544425511 ] } },
 { "type": "Feature", "properties": { "Name": "Revell Sink" }, "geometry": { "type": "Point", "coordinates": [ -84.329103588491137, 30.182681589100621 ] } },
-{ "type": "Feature", "properties": { "Name": "Spring Creek 1" }, "geometry": { "type": "Point", "coordinates": [ -84.329714, 30.080326 ] } },
+{ "type": "Feature", "properties": { "Name": "Spring Creek 1" }, "geometry": { "type": "Point", "coordinates": [ -84.329713926949211, 30.080325591997468 ] } },
 { "type": "Feature", "properties": { "Name": "Spring Creek 10" }, "geometry": { "type": "Point", "coordinates": [ -84.327699768128639, 30.074527249135716 ] } }
 ]
 }
