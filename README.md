@@ -13,7 +13,7 @@ Files:
   
 Required Software:  
   
-PostgreSQL 9.3.1  
+PostgreSQL 9.1.14  
     http://www.postgresql.org/download/  
     http://www.postgresql.org/docs/9.1/static/  
   
