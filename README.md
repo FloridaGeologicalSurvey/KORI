@@ -5,8 +5,12 @@ Please see the KORI github wiki for documentation and metadata:
   
 WKP-HRDB Database Download Location:  
     ftp://ftp.dep.state.fl.us/pub/outgoing/fgs/KORI/  
-  
-Files:  
+
+WKP-HRDB Database general installation notes:
+    https://github.com/FloridaGeologicalSurvey/KORI/wiki/Woodville-Karst-Plain-Hydrologic-Research-Database-(WKP-HRDB)
+    
+
+FTP Files (refer to installation notes above):  
     wkp_hrdb.backup  -- Native PostgreSQL compressed backup of the WKP-HRDB  
     wkp_hrdb.sql -- Raw SQL dump of the WKP-HRDB  
     wkp_hrdb.sql.zip -- .zip compressed copy of wkp_hrdb.sql  
