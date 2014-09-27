@@ -23,10 +23,9 @@ def writeFlags(data, startDeploy, connection_info):
     for j in data:
         if j[1] - startDeploy < calPeriod:
             cur.execute("UPDATE falmouth SET calibration = %s WHERE falmouth_id = %s", (True, j[0]))
-            con.commit()
         elif j[1] - startDeploy > calPeriod:
             cur.execute("UPDATE falmouth SET calibration = %s WHERE falmouth_id = %s", (False, j[0]))
-            con.commit()
+    con.commit()
     cur.close()
     con.close()
 
@@ -44,6 +43,7 @@ deployEnd = {i[1]:i[4].replace(tzinfo=None) for i in deployTable}
 deployNumbers = [i[1] for i in deployTable]
 
 for i in deployNumbers:
+    print "Flagging deploy number",i
     falmouthSQLquery = falmouth.buildSQLquery("falmouth_id, date_time", "falmouth", "deploy_key = %s" % i)
     data = falmouth.retrieveRows(falmouthSQLquery, dbinfo)
     data = [[j[0], j[1].replace(tzinfo=None)] for j in data]

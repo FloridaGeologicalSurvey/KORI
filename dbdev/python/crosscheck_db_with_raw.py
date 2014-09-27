@@ -26,12 +26,13 @@ def invertDictionary(dictionary):
     return inverse
     
 import falmouth, os, datetime
-falmouthWorkspace = r"C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_Sorted_Sanitized_03-21-2014"
+
+falmouthWorkspace = r"C:\GISData\WKP Data\Flat Data\Original Sensor Data\Canonical_Falmouth\dupes"
 #falmouthWorkspace = r'C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_import_Run_20140428'
 
 outputWorkspace = r"C:\PythonWorkspace\falmouthCheck"
 pw = raw_input("Enter Password: ")
-alice = ["FGS-27951g1","wkp_hrdb","post_root",pw]
+alice = ["fgs-usrv","wkp_hrdb","postgres",pw]
 timeRange = [datetime.datetime(2005, 1, 1, 0, 0, 0), datetime.datetime(2014, 1, 1, 0, 0, 0)]
 
 falmouthFiles = os.listdir(falmouthWorkspace)
@@ -91,12 +92,12 @@ for i in aFalmouth:
             pass
     rawData = falmouth.cast(rawData)
     dbData = falmouth.retrieveRange(utcTimestamp, deployKey, alice )
+    dbData = sorted(dbData, key = lambda datetime: datetime[2])
     if len(rawData)==len(dbData):
         print "Lengths match, proceeding"        
     else: print "WARNING: Lengths do not match", os.path.split(i)[1]
-
     for j,x in zip(rawData, dbData):
-        mismatchRow = []        
+        mismatchRow = []
         for v, k in enumerate(j):
             colName = rawDict[v]
             dbPosition = dbInvDict[colName]
@@ -106,6 +107,7 @@ for i in aFalmouth:
                 pass
             else:
                 mismatchRow.append(colName)
+                print colName, k, x[dbPosition]
         mismatchRow = list(set(mismatchRow))
     mismatchListA.append([i, [item for item in mismatchRow]])
     

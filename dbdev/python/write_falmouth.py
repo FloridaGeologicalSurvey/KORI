@@ -10,13 +10,13 @@ import falmouth
 
 #workspace that holds the raw files
 #dataWorkspace = r"C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_Sorted_Sanitized_03-21-2014"
-dataWorkspace = r'C:\GISData\WKP Data\Flat Data\Original Sensor Data\Falmouth_import_Run_20140428'
+dataWorkspace = r'C:\GISData\WKP Data\Flat Data\Original Sensor Data\Canonical_Falmouth\good'
 
 
 pw = raw_input("Enter DB password: ")
 
 
-alice = ["FGS-27951g1","wkp_hrdb","post_root",pw]
+alice = ["fgs-usrv","wkp_hrdb","postgres",pw]
 
 ######################    Constants  ###########################################
 #this is the ordered headers for the two types of Falmouth files
