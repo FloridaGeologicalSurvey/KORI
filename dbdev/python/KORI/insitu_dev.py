@@ -4,9 +4,60 @@ Created on Thu Sep 25 10:02:28 2014
 
 @author: Bassett_S
 """
-import datetime, os, csv, psycopg2, re 
+import datetime, os, csv, psycopg2, re, shutil, decimal
 import numpy as np
 
+def calculateWLEs(connection_info):
+    connection = psycopg2.connect(dsn=None, 
+            host= connection_info[0],
+            database= connection_info[1],
+            user= connection_info[2],
+            password= connection_info[3])
+    cursor = connection.cursor()
+
+
+    for i in range(18,30):
+        print i
+        cursor.execute("SELECT date_time, deploy_key, pres, zpo, insitu_id FROM insitu WHERE deploy_key = %s",(i,))
+        table = cursor.fetchall()
+        cursor.execute("SELECT adj_trans_elev FROM insitu_transducer WHERE deploy_key = %s",(i,))
+        trans_elev = float(cursor.fetchall()[0][0])
+        for row in table:
+            dt = row[0].strftime("%Y-%m-%d 00:00:00 UTC")
+            insitu_pres = float(row[2])
+            insitu_zpo = float(row[3])
+            insitu_id = int(row[4])
+            cursor.execute("SELECT yearmoda, stp FROM noaa_gsod WHERE station = 722140 AND yearmoda = TIMESTAMP %s",(dt,))
+            gsod_row = cursor.fetchall()[0]
+            millibars = float(gsod_row[1])
+            gsod_psi = millibars * 0.0145037738
+            wle = ((((insitu_pres + insitu_zpo) - gsod_psi) * 2.31) / 0.999) + trans_elev
+            cursor.execute("INSERT INTO insitu_wle (insitu_id, wle) VALUES (%s,%s)", (insitu_id,wle))
+        connection.commit()
+    cursor.close()
+    connection.close()
+    del cursor
+    del connection
+        
+        
+        
+        
+        
+
+def checkStatistics(path, connection_info):
+    files = os.listdir(path)
+    filePaths = [os.path.join(path, i) for i in files]
+    stats = {}
+    for i in Insitu.validHeaders:
+        stats[i] = []
+
+    for i in filePaths:
+        tf = Insitu(i, connection_info)
+        tf.parse()
+        tf.check()
+        fileStats = tf.calculateStats()
+        
+    return stats
 
 def loadDirectory(path, connection_info):
     """Load a directory of insiut files into the database"""
@@ -14,16 +65,32 @@ def loadDirectory(path, connection_info):
     filePaths = [os.path.join(path, i) for i in files]
     rowCount = 0
     compiledStatus = []    
-    for i in filePaths:
+    for v,i in enumerate(filePaths):
         tf = Insitu(i, connection_info)
         tf.parse()
         tf.check()
+        print "Loading {0} of {1}".format(v+1, len(filePaths))
         tf.load()
         if tf.status["loaded"] == True:
             rowCount += len(tf.castData)
         compiledStatus.append([tf.path, tf.status])
-    return compiledStatus
-    
+    #return compiledStatus
+
+def shutilDirectory(inPath, outPath, connection_info):
+    """Copy a directory of insitu files and rename in a standard format"""
+    files = os.listdir(inPath)
+    filePaths = [os.path.join(inPath, i) for i in files]
+    uniqueName = os.path.split(inPath)[1]
+    for i in filePaths:
+        tf = Insitu(i, connection_info)
+        tf.parse()
+        startDate = datetime.datetime.strftime(tf.keyDict["tstart"], "%Y%m%d")
+        endDate = datetime.datetime.strftime(tf.keyDict["tend"], "%Y%m%d")
+        tfNewName = uniqueName + "_" + startDate + "_" + endDate
+        tfNewPath = os.path.join(outPath,tfNewName)
+        shutil.copy(i, tfNewPath)
+
+        
 def preloadReport(path, reportDirectory, connection_info):
     """Generate a preload report for all files in a directory"""
     files = os.listdir(path)
@@ -46,16 +113,22 @@ def preloadReport(path, reportDirectory, connection_info):
             tf.check()
             f.write(os.path.split(tf.path)[1])
             f.write("\n")
-            f.write("Downloaded: %s\n" % tf.keyDict["download"])
-            f.write("Site      : %s\n" % tf.keyDict["site"])
-            f.write("Serial #  : %s\n" % tf.keyDict["serial"])
-            f.write("Device    : %s\n" % tf.keyDict["device"])
-            f.write("# Records : %s\n" % tf.keyDict["records"])
-            f.write("Start DT  : %s\n" % tf.keyDict["tstart"])
-            f.write("End DT    : %s\n" % tf.keyDict["tend"])
-            f.write("Deploy Key: %s\n" % tf.keyDict["deploykey"])
-            f.write("Cal Info  : %s\n" % tf.keyDict["calibration"])
-            f.write("GMT Info  : %s\n" % tf.keyDict["GMT"])
+            for i in tf.problems:
+                f.write(i)
+                f.write("\n")
+            f.write("Downloaded     : %s\n" % tf.keyDict["download"])
+            f.write("Site           : %s\n" % tf.keyDict["site"])
+            f.write("Serial #       : %s\n" % tf.keyDict["serial"])
+            f.write("Device         : %s\n" % tf.keyDict["device"])
+            f.write("# Records      : %s\n" % tf.keyDict["records"])
+            f.write("Start DT       : %s\n" % tf.keyDict["tstart"])
+            f.write("End DT         : %s\n" % tf.keyDict["tend"])
+            f.write("Deploy Key     : %s\n" % tf.keyDict["deploykey"])
+            f.write("Cal Info       : %s\n" % tf.keyDict["calibration"])
+            f.write("GMT Info       : %s\n" % tf.keyDict["GMT"])
+            f.write("ZPO            : %s\n" % tf.keyDict["ZPO"])
+            f.write("# Headers      : %s\n" % str(len(tf.headers)))            
+            f.write("# Data Columns : %s\n" % str(len(tf.castData[0])))
             f.write("File Parsed    : %s\n" % tf.status["parsed"])
             f.write("Headers OK     : %s\n" % tf.status["headers"])
             f.write("Cast OK        : %s\n" % tf.status["cast"])
@@ -64,12 +137,41 @@ def preloadReport(path, reportDirectory, connection_info):
             f.write("Headers        :\t")            
             for i in tf.headers:
                 f.write(str(i))
-                f.write("\t")
+                f.write("\t---\t")
             f.write("\n")
             for i in tf.log:
                 f.write(str(i))
                 f.write("\n")
             f.write("\n")
+        f.write("#"*40)
+def postloadReport(path, reportDirectory, connection_info):
+    """Generate a preload report for all files in a directory"""
+    files = os.listdir(path)
+    uniqueName = os.path.split(path)[1]
+    filePaths = [os.path.join(path, i) for i in files]
+    reportPath = os.path.join(reportDirectory, "insituPostloadReport_"+uniqueName+".txt")
+    with open(reportPath, 'a') as f:
+        f.write("\n")
+        f.write("#"*40)
+        f.write("\n")
+        f.write("NEW FOLDER SUMMARY\n")
+        f.write(str(path))
+        f.write("\n")
+        f.write(datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S"))
+        f.write("\n")
+        f.write("\n")
+        for i in filePaths:
+            tf = Insitu(i, connection_info)
+            tf.parse()
+            tf.check()
+            tf.checkStatistics()
+            tf.checkItems()
+            f.write(tf.path)
+            f.write("\n")
+            f.write("Deploy Key     : %s\n" % tf.keyDict["deploykey"])
+            f.write("# Rows         : %s\n" % tf.keyDict["records"])
+            f.write("Stats Check    : %s\n" % tf.keyDict["stats"])
+            f.write("Item Check     : %s\n" % tf.keyDict["items"])
         f.write("#"*40)
 
 
@@ -95,15 +197,15 @@ def serialReport(path, reportDirectory, connection_info):
             tf = Insitu(i, connection_info)
             tf.parse()
             if tf.keyDict["serial"] not in serialMin.keys():
-                serialMin[tf.keyDict["serial"]] = tf.keyDict["tstart"]
+                serialMin[tf.keyDict["serial"]] = tf.keyDict["tstart"] + datetime.timedelta(hours=5)
             elif tf.keyDict["serial"] in serialMin.keys():
                 if tf.keyDict["tstart"] < serialMin[tf.keyDict["serial"]]:
-                    serialMin[tf.keyDict["serial"]] = tf.keyDict["tstart"]
+                    serialMin[tf.keyDict["serial"]] = tf.keyDict["tstart"] + datetime.timedelta(hours=5)
             if tf.keyDict["serial"] not in serialMax.keys():
-                serialMax[tf.keyDict["serial"]] = tf.keyDict["tend"]
+                serialMax[tf.keyDict["serial"]] = tf.keyDict["tend"] + datetime.timedelta(hours=5)
             elif tf.keyDict["serial"] in serialMax.keys():
                 if tf.keyDict["tend"] > serialMax[tf.keyDict["serial"]]:
-                    serialMax[tf.keyDict["serial"]] = tf.keyDict["tend"]
+                    serialMax[tf.keyDict["serial"]] = tf.keyDict["tend"]+ datetime.timedelta(hours=5)
         for keys in serialMin:
             f.write("Serial: %s\n" % keys)
             f.write("Min   : %s\n" % serialMin[keys])
@@ -123,7 +225,7 @@ class Insitu:
                 "Depth (in)",
                 "Depth (cm)",
                 "Salinity (PSU)",
-                "Specific Conductivity (µS)",
+                "Specific Conductivity (\xb5S)",
                 "Pressure (PSI)",
                 "Resistivity (ohm-cm)",
                 "Actual Conductivity (µS)",
@@ -143,7 +245,17 @@ class Insitu:
                'depth': 'Depth (ft)',
                'pres': 'Pressure (PSI)'}
     
-
+    rawToDB = {"Water Density (g/cm3)":"water_density",
+       "Depth (ft)":"depth",
+       "Temperature (C)":"temp",
+       "Seconds":"elapsed_seconds",
+       "Total Dissolved Solids (ppt)":"total_dissolved_solids",
+       "Salinity (PSU)":"salinity",
+       "Specific Conductivity (\xb5S)":"cond_specific",
+       "Pressure (PSI)":"pres",
+       "Resistivity (ohm-cm)":"resistivity",
+       "Actual Conductivity (µS)":"cond_actual",
+       "Date and Time":"date_time"}
                
     def __init__(self, path, connection_info):
         self.path = path
@@ -159,6 +271,7 @@ class Insitu:
             "deploykey": None,
             "table": None,
             "loaded": None,
+            "greenlit":None
             }
         self.data = []
         self.castData = []
@@ -173,7 +286,10 @@ class Insitu:
             "tend":None,
             "deploykey":None,
             "calibration":None,
-            "GMT":None
+            "GMT":None,
+            "ZPO": None,
+            "stats": None,
+            "items": None
             }
 
         self.rowDict = {}
@@ -195,6 +311,7 @@ class Insitu:
         print "Deploy Key: %s" % self.keyDict["deploykey"]
         print "Cal Info  : %s" % self.keyDict["calibration"]
         print "GMT Info  : %s" % self.keyDict["GMT"]
+        print "ZPO       : %s" % self.keyDict["ZPO"]
     
     def infoStatus(self):
         print "File Parsed    : %s" % self.status["parsed"]
@@ -222,6 +339,7 @@ class Insitu:
         self.findMinMaxTimestamp()
         self.findCalibration()
         self.findGMTflag()
+        self.findZPO()
         self.status["parsed"] = True
     #except:
 #        print "Parsing Failed"
@@ -257,20 +375,110 @@ class Insitu:
             self.connection.commit()
             self.status["loaded"] = True
             print os.path.split(self.path)[1], "loaded successfully"
+    def checkItems(self):
+        startTS = self.returnUTCtimestamp(self.keyDict["tstart"])
+        startTS = "\'" + startTS + "\'"
+        endTS = self.returnUTCtimestamp(self.keyDict["tend"])
+        endTS = "\'" + endTS + "\'"
+        cursor = self.connection.cursor()
+        truncatedHeaders = [i for i in self.headers if i != 'Date and Time']
+        position = {}
+        for v,i in enumerate(self.headers):
+            position[i]=v
+        flag = None
+        for column in truncatedHeaders:
+            cursor.execute("""SELECT date_time, %s FROM insitu WHERE date_time >= %s AND date_time <= %s AND deploy_key = %s;""" % (self.rawToDB[column],startTS,endTS, self.keyDict["deploykey"]))
+            dbTable = cursor.fetchall()
+            dbTable = sorted(dbTable, key = lambda datetime: datetime[0])
+            for x,y in zip(dbTable,self.castData):
+                if type(x[1]) is long:
+                    if int(x[1]) != y[position[column]]:
+                        flag = False
+                elif type(x[1]) is decimal.Decimal:
+                    if float(x[1]) != y[position[column]]:
+                        flag=False
+        if flag is None:
+            self.keyDict["items"] = True
+        elif flag is False:
+            self.keyDict["items"] = False
+                    
+        cursor.close()
+        del cursor
+                
             
-    def calculateStats(self, data):
+    def checkStatistics(self, debug=False):
+        fData = self.calculateStats()
+        dbData = self.dbStats()
+        agreement = {
+            'min':[],
+            'mean':[],
+            'max':[],
+            'count':[],
+            'sum':[]}
+        values = {
+            'min':[],
+            'mean':[],
+            'max':[],
+            'count':[],
+            'sum':[]}
+        for i in dbData.keys():
+            for j,k in zip(fData[i], dbData[i]):
+                if round(float(j),3) == round(float(k),3):
+                    agreement[i].append(True)
+                    values[i].append((True, True))
+                else:
+                    agreement[i].append(False)
+                    values[i].append((round(float(j),3), float(k)))
+        flag = None
+        for key in agreement.keys():
+            if False in agreement[key]:
+                flag = False
+        if flag is None:
+            self.keyDict["stats"] = True
+        elif flag is False:
+            self.keyDict["stats"] = False
+        if debug is True:
+            return [agreement, values]
+    def calculateStats(self):
+        data = [i[1:] for i in self.castData]
         nparr = np.array(data)
         stats = {
             "min": np.amin(nparr, axis=0),
-            "median": np.median(nparr, axis=0),
             "mean": np.average(nparr, axis=0),
             "max": np.amax(nparr, axis=0),
-            "range": np.ptp(nparr, axis=0),
-            "var": np.var(nparr, axis=0),
-            "sd" : np.std(nparr, axis=0),
-            "count": len(data)
+            "count": [len(data)] * len(data[0]),
+            "sum": np.sum(nparr, axis=0)
             }
         return stats
+    def dbStats(self):
+        cursor = self.connection.cursor()
+        dbStats = {
+            "min": [],
+            "mean": [],
+            "max": [],
+            "count": [],
+            "sum": []
+            }
+        startTS = self.returnUTCtimestamp(self.keyDict["tstart"])
+        startTS = "\'" + startTS + "\'"
+        endTS = self.returnUTCtimestamp(self.keyDict["tend"])
+        endTS = "\'" + endTS + "\'"
+        dKey = self.keyDict["deploykey"]
+        for i in self.headers:            
+            if i != "Date and Time":
+                statsName = ["count", "min", "max", "sum", "mean"]
+                cursor.execute("SELECT COUNT(%s), MIN(%s), MAX(%s), SUM(%s), AVG(%s) FROM insitu WHERE date_time >= %s and date_time <= %s AND deploy_key = %s" % (self.rawToDB[i], self.rawToDB[i], self.rawToDB[i], self.rawToDB[i], self.rawToDB[i], startTS, endTS, dKey))
+                stats = cursor.fetchall()[0]
+                for j,k in zip(statsName, stats):
+                    if type(k) is long:
+                        dbStats[j].append(int(k))
+                    elif type(k) is decimal.Decimal:
+                        dbStats[j].append(float(k))
+        cursor.close()
+        del cursor
+        return dbStats
+                
+        
     def findCalibration(self):
         log = []
         for i in self.data[self.rowDict["log"]:]:
@@ -314,8 +522,15 @@ class Insitu:
 #            expireDateTime = datetime.datetime.strptime(expireDate, '%m/%d/%Y %H:%M:%S %p')
 #            self.keyDict["calibration"] = expireDateTime
                 
-                  
-              
+    def findZPO(self):
+        offset = 0
+
+        for v,i in enumerate(self.data):
+            if "Zero Pressure Offset:" in i:
+                offset = float(self.data[v][i.index("Zero Pressure Offset:")+1])
+        self.keyDict["ZPO"] = offset
+
+            
     def keyDictionary(self):
         """Create the key dictionary"""
         for v, i in enumerate(self.data):
@@ -377,7 +592,8 @@ class Insitu:
                 self.status["headers"] = True
             elif i not in self.validHeaders:
                 self.status["headers"] = False
-                self.problems.append("Header",i,"not valid")
+                problem = "Header" + str(i) + "not valid"
+                self.problems.append(problem)
             
         
     def cast(self):
@@ -423,7 +639,7 @@ class Insitu:
         
         
     def returnUTCtimestamp(self, ts):
-        textTS = datetime.datetime.strftime(ts-datetime.timedelta(hours=5), "%Y-%m-%d %H:%M:%S UTC")
+        textTS = datetime.datetime.strftime(ts+datetime.timedelta(hours=5), "%Y-%m-%d %H:%M:%S UTC")
         return textTS
         
     def checkTable(self):
@@ -468,6 +684,7 @@ class Insitu:
            'elapsed_seconds': None,
            'depth': None,
            'pres': None,
+           'calculated_wle':None,
            'calibration':None}
         for v, i in enumerate(row):
             valueDict[rawToDB[headerDict[v]]] = i
@@ -483,7 +700,18 @@ class Insitu:
     def executeLoad(self, rowDict):
         """Executes load of values into the database"""
         cursor = self.connection.cursor()
-        cursor.execute("""INSERT INTO insitu (deploy_key, date_time, elapsed_seconds, pres, temp, depth, cond_actual, cond_specific, salinity, tds, resistivity, water_density, calibration) 
-                    values(%(deploy_key)s, %(date_time)s, %(elapsed_seconds)s, %(pres)s, %(temp)s, %(depth)s, %(cond_actual)s, %(cond_specific)s, %(salinity)s, %(tds)s, %(resistivity)s, %(water_density)s, %(calibration)s);""",
-                    {'deploy_key':rowDict["deploy_key"], 'date_time':self.returnUTCtimestamp(rowDict["date_time"]), 'elapsed_seconds':rowDict["elapsed_seconds"], 'pres':rowDict["pres"], 'temp':rowDict["temp"], 'depth':rowDict["depth"], 'cond_actual':rowDict["cond_actual"], 'cond_specific':rowDict["cond_specific"], 'salinity':rowDict["salinity"], 'tds':rowDict["total_dissolved_solids"], 'resistivity':rowDict['resistivity'], 'water_density':rowDict['water_density'], "calibration":rowDict['calibration']})
+        cursor.execute("""INSERT INTO insitu (deploy_key, date_time, elapsed_seconds, pres, temp, depth, cond_actual, cond_specific, salinity, tds, resistivity, water_density, calibration, zpo) 
+                    values(%(deploy_key)s, %(date_time)s, %(elapsed_seconds)s, %(pres)s, %(temp)s, %(depth)s, %(cond_actual)s, %(cond_specific)s, %(salinity)s, %(tds)s, %(resistivity)s, %(water_density)s, %(calibration)s, %(zpo)s);""",
+                    {'deploy_key':rowDict["deploy_key"], 'date_time':self.returnUTCtimestamp(rowDict["date_time"]), 'elapsed_seconds':rowDict["elapsed_seconds"], 'pres':rowDict["pres"], 'temp':rowDict["temp"], 'depth':rowDict["depth"], 'cond_actual':rowDict["cond_actual"], 'cond_specific':rowDict["cond_specific"], 'salinity':rowDict["salinity"], 'tds':rowDict["total_dissolved_solids"], 'resistivity':rowDict['resistivity'], 'water_density':rowDict['water_density'], "calibration":rowDict['calibration'], "zpo":self.keyDict["ZPO"]})
         del cursor
+    
+    def calculateWLE(self, rowDict):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT adj_trans_elev FROM insitu_transducer WHERE deploy_key = %s" % str(rowDict["deploy_key"]))
+        row = cursor.fetchall()
+        transElev = float(row[0][0])
+        pressure = rowDict['pres'] + self.keyDict["ZPO"]
+        head = (pressure * 2.31) / 0.999
+        wle = round((transElev + head), 3)
+        rowDict["calculated_wle"] = wle
+        return rowDict

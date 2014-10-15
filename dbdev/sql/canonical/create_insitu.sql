@@ -13,6 +13,7 @@ CREATE TABLE insitu
   tds numeric(4,3),
   resistivity numeric(7,3),
   water_density numeric(4,3),
+  zpo numeric(6,3),
   calibration BOOLEAN
 );
 
@@ -26,11 +27,28 @@ COMMENT ON COLUMN insitu.date_time IS 'Timestamp for observation (timestamp)';
 COMMENT ON COLUMN insitu.elapsed_seconds IS 'Elapsed seconds since sensor was initialized (S)';
 COMMENT ON COLUMN insitu.pres IS 'Pressure, PSI (PSI)';
 COMMENT ON COLUMN insitu.temp IS 'Temperature, Celsius (C)';
-COMMENT ON COLUMN insitu.depth IS 'Depth, Feet (ft)';
+COMMENT ON COLUMN insitu.depth IS 'Depth, Feet (ft). Note this value may be incorrect if ZPO is non-zero';
 COMMENT ON COLUMN insitu.cond_actual IS 'Actual Conductivity, mirosiemens (µS)';
 COMMENT ON COLUMN insitu.cond_specific IS 'Specific Conductivity, microsiemens (µS)';
 COMMENT ON COLUMN insitu.salinity IS 'Salinity, practical salinity units (PSU)';
 COMMENT ON COLUMN insitu.tds IS 'Total Dissolved Solids, parts per trillion (ppt)';
 COMMENT ON COLUMN insitu.resistivity IS 'Resistivity, ohm-centimeter (Ω-cm)';
 COMMENT ON COLUMN insitu.water_density IS 'Water Density, gallons per cubic centimeter (g/cm3)';
+COMMENT ON COLUMN insitu.zpo IS 'Zero Pressure Offset (PSI). ZPO should be added to the pres column to get the true pressure reading at the transducer';
 COMMENT ON COLUMN insitu.calibration IS 'Calibration Flag, boolean';
+
+/*
+CREATE TABLE insitu_wle
+(
+    insitu_id integer REFERENCES insitu (insitu_id),
+    wle NUMERIC(6,3),
+    PRIMARY KEY (insitu_id)
+);
+
+ALTER TABLE insitu_wle
+    OWNER TO postgres;
+COMMENT ON TABLE insitu_wle
+    IS 'Insitu calculated Water Level Elevations';
+COMMENT ON COLUMN insitu_wle.insitu_id IS 'Primary Key, foreign key from the insitu table';
+COMMENT ON COLUMN insitu_wle.wle IS 'Calculated water level elevation, NAVD88 (US ft)';
+*/
