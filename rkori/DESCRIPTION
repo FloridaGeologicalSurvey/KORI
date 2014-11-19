@@ -1,0 +1,17 @@
+Package: rkori
+Title: Tools for interfacing with the WKP-HRDB
+Version: 0.1
+Authors@R: "Seth Bassett <Seth.Bassett@dep.state.fl.us> [aut, cre]"
+Description: This package has been developed by the Florida Geological Survey
+    as a tool for streamlining access to the Woodville Karst Plain Hydrologic
+    Research Database. Tool types include at present include query tools
+    (requires RPostgreSQL) and plotting tools (requires ggplot2), with
+    implementations of modelling tools to follow.
+Depends:
+    R (>= 3.1.0)
+Imports:
+    RPostgreSQL,
+    ggplot2,
+    ggthemes
+License: Public Domain
+LazyData: true

@@ -24,6 +24,6 @@ CREATE OR REPLACE VIEW public.hourly_falmouth
         FROM 
             (SELECT 
             deploy_key, date_trunc('hour',date_time) AS date_time, pres, temp, cond, aspd, radians(avdir) as avdir
-            FROM falmouth) 
+            FROM core.falmouth) 
             AS temp 
     GROUP BY deploy_key, date_time;

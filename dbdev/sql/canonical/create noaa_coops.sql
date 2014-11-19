@@ -1,4 +1,4 @@
-CREATE TABLE noaa_coops
+CREATE TABLE extra.noaa_coops
 (
     coops_id SERIAL CONSTRAINT coops_id PRIMARY KEY,
     site_id INTEGER REFERENCES sites (site_id),
@@ -13,21 +13,21 @@ CREATE TABLE noaa_coops
     quality CHAR(1)
 );
 
-ALTER TABLE noaa_coops
+ALTER TABLE extra.noaa_coops
     OWNER TO postgres;
     
-COMMENT ON TABLE noaa_coops IS 'NOAA Tidal Data';
-COMMENT ON COLUMN noaa_coops.coops_id IS 'Table Primary Key, sequential integer';
-COMMENT ON COLUMN noaa_coops.site_id IS 'Foreign Key from sites table';
-COMMENT ON COLUMN noaa_coops.station_id IS 'Station Identifier';
-COMMENT ON COLUMN noaa_coops.date_time IS 'Timestamp, UTC';
-COMMENT ON COLUMN noaa_coops.wle IS 'Water Level Elevation, NAVD88 (ft)';
-COMMENT ON COLUMN noaa_coops.sigma IS 'Unknown field';
-COMMENT ON COLUMN noaa_coops.O IS 'Unknown field';
-COMMENT ON COLUMN noaa_coops.F IS 'Unknown field';
-COMMENT ON COLUMN noaa_coops.R is 'Unknown Field';
-COMMENT ON COLUMN noaa_coops.L is 'Unknown field';
-COMMENT ON COLUMN noaa_coops.quality IS 'Quality Flag. v = verified';
+COMMENT ON TABLE extra.noaa_coops IS 'NOAA Tidal Data';
+COMMENT ON COLUMN extra.noaa_coops.coops_id IS 'Table Primary Key, sequential integer';
+COMMENT ON COLUMN extra.noaa_coops.site_id IS 'Foreign Key from sites table';
+COMMENT ON COLUMN extra.noaa_coops.station_id IS 'Station Identifier';
+COMMENT ON COLUMN extra.noaa_coops.date_time IS 'Timestamp, UTC';
+COMMENT ON COLUMN extra.noaa_coops.wle IS 'Water Level Elevation, NAVD88 (ft)';
+COMMENT ON COLUMN extra.noaa_coops.sigma IS 'Unknown field';
+COMMENT ON COLUMN extra.noaa_coops.O IS 'Unknown field';
+COMMENT ON COLUMN extra.noaa_coops.F IS 'Unknown field';
+COMMENT ON COLUMN extra.noaa_coops.R is 'Unknown Field';
+COMMENT ON COLUMN extra.noaa_coops.L is 'Unknown field';
+COMMENT ON COLUMN extra.noaa_coops.quality IS 'Quality Flag. v = verified';
 
 
 

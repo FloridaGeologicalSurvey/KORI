@@ -1,6 +1,6 @@
 --View that is oriented towards R users
 
-CREATE OR REPLACE VIEW public.rnoaa_ghcn
+CREATE OR REPLACE VIEW public.rghcn_rainfall
     (
     site_name,
     date_time,

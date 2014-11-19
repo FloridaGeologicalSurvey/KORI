@@ -1,10 +1,5 @@
--- Table: deploy_info
-
--- DROP TABLE deploy_info;
-
-
 CREATE TABLE deploy_info (
-    site_id integer REFERENCES sites (site_id),
+    site_id integer REFERENCES public.sites (site_id),
     deploy_key SERIAL CONSTRAINT deploy_key PRIMARY KEY,
     serial_number character varying,
     start_dt timestamp with time zone,

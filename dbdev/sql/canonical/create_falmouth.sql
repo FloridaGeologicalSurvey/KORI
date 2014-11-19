@@ -6,7 +6,7 @@ CREATE TABLE falmouth
   avn NUMERIC(5, 2),
   ave NUMERIC(5,2),
   aspd NUMERIC(6,3),
-  avdir NUMERIC(6,3),
+  avdir NUMERIC(6,3) CONSTRAINT on_compass_min CHECK(avdir >= 0) CONSTRAINT on_compass_max CHECK(avdir <= 360),
   atlt NUMERIC(4,2),
   cond NUMERIC(6,4),
   temp NUMERIC(6,4),
@@ -30,13 +30,14 @@ CREATE TABLE falmouth
   vef NUMERIC(5,2),
   vgh NUMERIC(5,2),
   salt NUMERIC(6,4),
-  calibration BOOLEAN
+  calibration BOOLEAN,
+  CONSTRAINT unique_observation UNIQUE(date_time, deploy_key)
   );
   
 ALTER TABLE falmouth
   OWNER TO post_root;
 COMMENT ON TABLE falmouth
-  IS 'FGS Falmouth 2D-ACM Deep Network sensor data';
+  IS 'FGS Deep Network Falmouth 2D-ACM Deep Network sensor data';
 COMMENT ON COLUMN falmouth.falmouth_id IS 'table PK';
 COMMENT ON COLUMN falmouth.deploy_key IS 'Deploy Key, foreign key from deploy_info table';
 COMMENT ON COLUMN falmouth.date_time IS 'Timestamp of observation, UTC';

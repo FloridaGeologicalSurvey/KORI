@@ -1,0 +1,2 @@
+CREATE SCHEMA core;
+CREATE SCHEMA extra;
