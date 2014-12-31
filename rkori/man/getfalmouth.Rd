@@ -31,4 +31,7 @@ f <- getfalmouth(con, "2012-11-01 00:00:00", "2012-12-01 00:00:00")
 qplot(data=f, x=date_time, y=val, colour=site_name) +
      facet_wrap(site_name~var, scales="free_y", nrow=length(levels(f$site_name)), ncol=length(levels(f$var)))
 }
+\seealso{
+Other res: \code{\link{matplotfalmouth}}
+}
 
