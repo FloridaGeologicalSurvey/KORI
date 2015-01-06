@@ -29,7 +29,7 @@
 getfalmouth <- function(database_connection, start_timestamp, end_timestamp) {
     require(RPostgreSQL)
     #base SQL query
-    sql <- "SELECT * from rfalmouth WHERE date_time >= \'STARTDATE\' AND date_time < \'ENDDATE\';"
+    sql <- "SELECT * from rfalmouth WHERE date_time >= \'STARTDATE\' AND date_time < \'ENDDATE\' ORDER BY (date_time, site_name);"
     
     #Sub start and end timestamps
     sql <- gsub("STARTDATE", start_timestamp, sql)
