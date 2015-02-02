@@ -3,7 +3,7 @@ CREATE TABLE core.insitu
   insitu_id SERIAL CONSTRAINT insitu_key PRIMARY KEY,
   deploy_key integer REFERENCES deploy_info (deploy_key),
   date_time timestamp with time zone,
-  elapsed_seconds numeric(10,3),
+  elapsed_seconds numeric(11,3),
   pres numeric(6,3),
   temp numeric(5,3),
   depth numeric(6,3),

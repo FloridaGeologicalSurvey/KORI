@@ -16,23 +16,37 @@ def calculateWLEs(connection_info):
     cursor = connection.cursor()
 
 
-    for i in range(18,30):
-        print i
+    for i in range(30,35):
+        print "Calculating {0}".format(i)
         cursor.execute("SELECT date_time, deploy_key, pres, zpo, insitu_id FROM insitu WHERE deploy_key = %s",(i,))
         table = cursor.fetchall()
-        cursor.execute("SELECT adj_trans_elev FROM insitu_transducer WHERE deploy_key = %s",(i,))
+        cursor.execute("SELECT adj_trans_elev, vented FROM insitu_transducer WHERE deploy_key = %s",(i,))
         trans_elev = float(cursor.fetchall()[0][0])
         for row in table:
+            #cast data
             dt = row[0].strftime("%Y-%m-%d 00:00:00 UTC")
             insitu_pres = float(row[2])
             insitu_zpo = float(row[3])
             insitu_id = int(row[4])
-            cursor.execute("SELECT yearmoda, stp FROM noaa_gsod WHERE station = 722140 AND yearmoda = TIMESTAMP %s",(dt,))
+            
+            #get daily barometric pressures
+            cursor.execute("SELECT yearmoda, stp FROM noaa_gsod WHERE station = 722140 AND yearmoda = TIMESTAMP %s",(dt,))            
             gsod_row = cursor.fetchall()[0]
+            
+            #run conversions
+            #first cast stp column (millibars) to float      
             millibars = float(gsod_row[1])
+            
+            #convert millibars to PSI
             gsod_psi = millibars * 0.0145037738
-            wle = ((((insitu_pres + insitu_zpo) - gsod_psi) * 2.31) / 0.999) + trans_elev
+            
+            #calculate WLE in meters and convert to feet
+            
+            wle = (((((insitu_pres + insitu_zpo) - gsod_psi) * 0.703073) / 0.999) + trans_elev) * 3.28084
+
+            #execute insert            
             cursor.execute("INSERT INTO insitu_wle (insitu_id, wle) VALUES (%s,%s)", (insitu_id,wle))
+        #commmit changes and close connections
         connection.commit()
     cursor.close()
     connection.close()
@@ -199,7 +213,7 @@ def serialReport(path, reportDirectory, connection_info):
             if tf.keyDict["serial"] not in serialMin.keys():
                 serialMin[tf.keyDict["serial"]] = tf.keyDict["tstart"] + datetime.timedelta(hours=5)
             elif tf.keyDict["serial"] in serialMin.keys():
-                if tf.keyDict["tstart"] < serialMin[tf.keyDict["serial"]]:
+                if tf.keyDict["tstart"] < serialMin[tf.keyDict["serial"]] and tf.keyDict["tstart"] > datetime.datetime(1980, 1, 1):
                     serialMin[tf.keyDict["serial"]] = tf.keyDict["tstart"] + datetime.timedelta(hours=5)
             if tf.keyDict["serial"] not in serialMax.keys():
                 serialMax[tf.keyDict["serial"]] = tf.keyDict["tend"] + datetime.timedelta(hours=5)
@@ -345,11 +359,23 @@ class Insitu:
 #        print "Parsing Failed"
 #        self.status["parsed"] = False
 #        self.problems.append("Failed to parse")
-    
+    def convertDepth(self):
+        convertedDepths = []
+        if "Depth (cm)" in self.headers:
+            for row in self.castData:
+                for i, j in zip(self.headers, row):
+                    if i == 'Depth (cm)':
+                        convertedDepths.append(round(j * 0.0328084, 3))
+        for rowpos, (depth, row) in enumerate(zip(convertedDepths, self.castData[:])):
+            for itempos, cname in enumerate(self.headers):
+                if cname == "Depth (cm)":
+                    self.castData[rowpos][itempos] = depth
+        
     def check(self):
         if self.status["parsed"] == True:
             self.checkHeaders()
-            self.cast()   
+            self.cast()
+            self.convertDepth()
             self.checkDeployKey()
             if self.keyDict["deploykey"] ==  "*INVALID*":
                 self.status["table"] == "SKIPPED"
@@ -662,7 +688,8 @@ class Insitu:
         for v, i in enumerate(self.headers):
             headerDict[v] = i
         rawToDB = {"Water Density (g/cm3)":"water_density",
-           "Depth (ft)":"depth",
+           "Depth (ft)":"depth", 
+           "Depth (cm)":"depth",
            "Temperature (C)":"temp",
            "Seconds":"elapsed_seconds",
            "Total Dissolved Solids (ppt)":"total_dissolved_solids",
@@ -670,7 +697,7 @@ class Insitu:
            "Specific Conductivity (\xb5S)":"cond_specific",
            "Pressure (PSI)":"pres",
            "Resistivity (ohm-cm)":"resistivity",
-           "Actual Conductivity (µS)":"cond_actual",
+           "Actual Conductivity (\xb5S)":"cond_actual",
            "Date and Time":"date_time"}
         valueDict = {'deploy_key': self.keyDict["deploykey"],
            'date_time': None,
