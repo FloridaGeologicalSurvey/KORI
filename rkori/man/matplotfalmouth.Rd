@@ -10,7 +10,7 @@ matplotfalmouth(falmouth, scale_type = "free_y", point_size = 1)
 
 \item{scale_type}{(str) A string value giving the scales value for the facet_wrap() function. Valid values are "fixed", "free", "free_x", "free_y". Default value is "free_y".}
 
-\item{data}{point_size (numeric) A numeric value giving the point size for plots. Defaults to 1, bt may need adjusting depending on the size of the date range plotted.}
+\item{point_size}{(numeric) A numeric value giving the point size for plots. Defaults to 1, bt may need adjusting depending on the size of the date range plotted.}
 }
 \value{
 This function returns nothing
@@ -27,6 +27,7 @@ always be run before querying the database.
 \examples{
 require(RPostgreSQL)
 require(ggplot2)
+Sys.setenv(TZ='GMT')
 con <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
 f <- getfalmouth(con, "2012-11-01 00:00:00", "2012-12-01 00:00:00")
 matplotfalmouth(f)
