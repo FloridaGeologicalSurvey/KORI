@@ -142,4 +142,13 @@ class Falmouth:
         cursor.close()
         del cursor
     
+    def return_rowcount_in_database(self):
+        cursor = self.connection.cursor()
+        minMaxTimestamp = self.returnMinMaxTimestamp()
+        sql = "SELECT COUNT(*) FROM FALMOUTH WHERE deploy_key={0} AND date_time >= \'{1}\' AND date_time <= \'{2}\'".format(self.deployNumber, minMaxTimestamp[0], minMaxTimestamp[1])
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        return rows[0][0]
+
+        
     
