@@ -9,22 +9,39 @@ import psycopg2
 import datetime
 import decimal
 import os
-
+idPairs = [('ad_tunnel', 'AD (Deep)'),
+        ('ak_tunnel', 'AK (Deep)'),
+        ('k_tunnel', 'K (Deep)'),
+        ('d_tunnel', 'D (Deep)'),
+        ('revell', 'Revell Sink (Deep)'),
+        ('b_tunnel', 'B (Deep)'),
+        ('c_tunnel', 'C (Deep)'),
+        ('sc1', 'Spring Creek 1 (Deep)'),
+        ('sc10', 'Spring Creek 10 (Deep)')]
+        
 class Kincaid:
-    def __init__(self, password, tsRange, table):
+    def __init__(self, password, tsRange, idPair):
         self.connection = psycopg2.connect(
             dsn=None, 
             host= "fgs-usrv",
             database= "wkp_kincaid",
             user= "postgres",
             password= password)
+        self.connection2 = psycopg2.connect(
+            dsn=None, 
+            host= "fgs-usrv",
+            database= "wkp_hrdb_dev",
+            user= "postgres",
+            password= password)
         self.tsRange = tsRange
         self.queryColumns = ['date', 'time', 'aspd', 'adir', 'cond', 'temp', 'pressure']
         self.headers = ['date', 'time', 'aspd', 'avdir', 'cond', 'temp', 'pres']
-        self.table = table
+        self.table, self.site_id = idPair
         self.sql = self.set_sql()
         self.data = self.cast_data(self.get_data())
         self.utcRange = self.set_utcRange()
+        self.deploy_table = self.get_deploy_table()
+        
         
     def set_sql(self):
         if self.tsRange == (None, None):
@@ -60,7 +77,46 @@ class Kincaid:
         dtList = [row["date_time"] for row in self.data]
         return (min(dtList), max(dtList))
         
-
+    def create_insert_statement(self, row):
+        """Creates an insert statement for each row"""
+        listFields = sorted(row.keys())
+        intoStatement = ", ".join(listFields)
+        valueParts = ["%({0})s".format(i) for i in listFields]
+        valuesStatement = ", ".join(valueParts)
+        insertStatement = """INSERT INTO {0} ({1}) VALUES ({2});""".format('falmouth', intoStatement, valuesStatement)
+        return insertStatement
+        
+    def prepare_table_for_insert(self):
+        for row in self.data[:]:
+            del row["est"], row["date"], row["time"]
+            row["deploy_key"] = self.return_deploy_key(row)
+            row["date_time"] = datetime.datetime.strftime(row["date_time"], '%Y-%m-%d %H:%M:%S')
+            row["source"] = "Hazlett-Kincaid"
+        
+    
+        
+    def get_deploy_table(self):
+        cursor = self.connection2.cursor()
+        sql = "SELECT s.site_name, d.deploy_key, d.start_dt, d.end_dt FROM deploy_info d INNER JOIN sites s USING (site_id);"
+        cursor.execute(sql)
+        deploy_key = cursor.fetchall()
+        keys = ["site_name", "deploy_key", "start", "end"]        
+        dt = [{key:value for key, value in zip(keys, row)} for row in deploy_key]
+        for row in dt[:]:
+            for key in row.keys():
+                if type(row[key]) == datetime.datetime:
+                    row[key] = row[key].replace(tzinfo=None)
+        
+        cursor.close()
+        del cursor
+        return dt
+    
+    def return_deploy_key(self, row):
+        for i in self.deploy_table:
+            if i["site_name"] == self.site_id and row["date_time"] >= i["start"] and row["date_time"] <= i["end"]:
+                deploy_key = i["deploy_key"]
+        return deploy_key
+        
 class Raw:
     def __init__(self, password, tsRange, site):
         self.connection = psycopg2.connect(
@@ -124,7 +180,7 @@ class Comparator:
         self.table1 = table1
         self.table2 = table2
         self.keyValue = keyValue
-        self.flags = {'abscount': self.return_abs_diff(),
+        self.flags = {'abscount': None,
                       't1 not t2': None,
                       't2 not t1': None}
         self.comparisonKeys = self.set_comparison_keys()
@@ -144,6 +200,11 @@ class Comparator:
         dt2 = set([row[self.keyValue] for row in self.table2])
         overlap = sorted(list((dt1 & dt2)))
         return overlap
+    
+    def return_t2_not_t1(self):
+        dt1 = set([row[self.keyValue] for row in self.table1])
+        dt2 = set([row[self.keyValue] for row in self.table2])
+        return sorted(list(dt2 - dt1))
         
     def return_abs_diff(self):
         "return the absolute difference in row counts"
@@ -229,7 +290,8 @@ class Comparator:
                     f.write("( {0},{1} )\t".format(row1[key],row2[key]))
                 f.write("\n")
                 
-                
+"""  
+#main comparison script, compares all Falmouth sites to the kincaid values            
 if __name__ == "__main__":
     idPairs = [('ad_tunnel', 'AD (Deep)'),
             ('ak_tunnel', 'AK (Deep)'),
@@ -244,7 +306,7 @@ if __name__ == "__main__":
     tsRangeEST = ('2003-01-01 00:00:00','2015-01-01 00:00:00' )
     tsRangeUTC = ('2003-01-01 05:00:00','2015-01-01 05:00:00' )
     overlapRows = 0
-    pw = 'incorrectLitho'
+    
     for pair in idPairs:
         kincaid = Kincaid(pw, tsRangeEST, pair[0])
         raw = Raw(pw, tsRangeUTC, pair[1])
@@ -265,7 +327,7 @@ if __name__ == "__main__":
     
     print "Total Overlapped Rows = {0}".format(overlapRows)
     
-        
+"""       
     
         
         
