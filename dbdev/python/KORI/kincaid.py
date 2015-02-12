@@ -36,7 +36,8 @@ class Kincaid:
         self.tsRange = tsRange
         self.queryColumns = ['date', 'time', 'aspd', 'adir', 'cond', 'temp', 'pressure']
         self.headers = ['date', 'time', 'aspd', 'avdir', 'cond', 'temp', 'pres']
-        self.table, self.site_id = idPair
+        self.table = idPair[0]
+        self.site_id = idPair[1]
         self.sql = self.set_sql()
         self.data = self.cast_data(self.get_data())
         self.utcRange = self.set_utcRange()
@@ -91,7 +92,6 @@ class Kincaid:
             del row["est"], row["date"], row["time"]
             row["deploy_key"] = self.return_deploy_key(row)
             row["date_time"] = datetime.datetime.strftime(row["date_time"], '%Y-%m-%d %H:%M:%S')
-            row["source"] = "Hazlett-Kincaid"
         
     
         
@@ -116,6 +116,16 @@ class Kincaid:
             if i["site_name"] == self.site_id and row["date_time"] >= i["start"] and row["date_time"] <= i["end"]:
                 deploy_key = i["deploy_key"]
         return deploy_key
+        
+    def insert_table(self):
+        cursor = self.connection2.cursor()
+        for row in self.data:
+            sql = self.create_insert_statement(row)
+            cursor.execute(sql, row)
+        self.connection2.commit()
+        cursor.close
+        del cursor
+        
         
 class Raw:
     def __init__(self, password, tsRange, site):
@@ -290,7 +300,7 @@ class Comparator:
                     f.write("( {0},{1} )\t".format(row1[key],row2[key]))
                 f.write("\n")
                 
-"""  
+
 #main comparison script, compares all Falmouth sites to the kincaid values            
 if __name__ == "__main__":
     idPairs = [('ad_tunnel', 'AD (Deep)'),
@@ -308,7 +318,7 @@ if __name__ == "__main__":
     overlapRows = 0
     
     for pair in idPairs:
-        kincaid = Kincaid(pw, tsRangeEST, pair[0])
+        kincaid = Kincaid(pw, tsRangeEST, pair)
         raw = Raw(pw, tsRangeUTC, pair[1])
         comparator = Comparator(raw.data, kincaid.data, "date_time")
         #fnFast = ["fast", pair[0], datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d')]
@@ -325,9 +335,7 @@ if __name__ == "__main__":
         del raw
         del comparator
     
-    print "Total Overlapped Rows = {0}".format(overlapRows)
-    
-"""       
+    print "Total Overlapped Rows = {0}".format(overlapRows)  
     
         
         

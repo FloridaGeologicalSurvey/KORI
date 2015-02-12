@@ -8,8 +8,8 @@ Module for handling NOAA GHCN data
 """
 
 import datetime, os, csv, psycopg2, re, shutil
-ghcnPath = r'C:\GISData\WKP Data\Flat Data\CLEAN CDO\ghcn\five_counties.csv'
-ghcnHeader = r'C:\GISData\WKP Data\Flat Data\CLEAN CDO\ghcn\five_counties_header.txt'
+ghcnPath = r'C:\GISData\WKP Data\Flat Data\CLEAN CDO\ghcn_2003\five_counties.csv'
+ghcnHeader = r'C:\GISData\WKP Data\Flat Data\CLEAN CDO\ghcn_2003\five_counties_header.txt'
 
 #fcounties = Ghcn(ghcnPath, ghcnHeader, usrv)
 
@@ -20,9 +20,9 @@ class Ghcn:
         'STATION_NAME':str,
         'station': str,
         'DATE': str,
-        'LATITUDE': str,
-        'LONGITUDE':str,
-        'ELEVATION':str,
+        'LATITUDE': float,
+        'LONGITUDE':float,
+        'ELEVATION':float,
         'date_time': str,
         'SX32': int,
         'SX32_mflag':str,
@@ -124,7 +124,7 @@ class Ghcn:
         for prow, row in zip(pressedrow, self.data):
             #print "ROW {0}".format(v)
             #print "appending station"
-            prow['station'] = row['STATION']
+
             #print "compiling datetime"            
             #tobs = self.findTOBS(row)
             date = row['DATE']
@@ -134,6 +134,18 @@ class Ghcn:
             for key in row.keys():
                 if Ghcn.types[key] is int and row[key] != '9999' and row[key] != '-9999' and row[key] != "":
                     prow[key] = int(row[key])
+                elif Ghcn.types[key] is int and (row[key] != '9999' or row[key] != '-9999' or row[key] != ""):
+                    prow[key] = None
+                elif Ghcn.types[key] is float and row[key] != 'unknown':
+                    prow[key] = float(row[key])
+                elif Ghcn.types[key] is float and row[key] == 'unknown':
+                    prow[key] = None
+                elif Ghcn.types[key] is str and row[key] != " ":
+                    prow[key] = row[key]
+                elif Ghcn.types[key] is str and row[key] == " ":
+                    prow[key] = None
+                
+        pressedrow = [{key:row[key] for key in row.keys() if key !='DATE'} for row in pressedrow[:]]
         return pressedrow
     def findTOBS(self, row):
         tobs = [row[key] for key in row.keys() if "_tobs" in key]
