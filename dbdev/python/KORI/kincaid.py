@@ -34,8 +34,8 @@ class Kincaid:
             user= "postgres",
             password= password)
         self.tsRange = tsRange
-        self.queryColumns = ['date', 'time', 'aspd', 'adir', 'cond', 'temp', 'pressure']
-        self.headers = ['date', 'time', 'aspd', 'avdir', 'cond', 'temp', 'pres']
+        self.queryColumns = ['date', 'time', 'aspd', 'adir', 'cond', 'temp']
+        self.headers = ['date', 'time', 'aspd', 'avdir', 'cond', 'temp']
         self.table = idPair[0]
         self.site_id = idPair[1]
         self.sql = self.set_sql()
@@ -303,15 +303,17 @@ class Comparator:
 
 #main comparison script, compares all Falmouth sites to the kincaid values            
 if __name__ == "__main__":
-    idPairs = [('ad_tunnel', 'AD (Deep)'),
-            ('ak_tunnel', 'AK (Deep)'),
+    idPairs = [('ad_new', 'AD (Deep)'),
+            ('ak_new', 'AK (Deep)')]
+    """idPairs = [('ad_new', 'AD (Deep)'),
+            ('ak_new', 'AK (Deep)'),
             ('k_tunnel', 'K (Deep)'),
             ('d_tunnel', 'D (Deep)'),
             ('revell', 'Revell Sink (Deep)'),
             ('b_tunnel', 'B (Deep)'),
             ('c_tunnel', 'C (Deep)'),
             ('sc1', 'Spring Creek 1 (Deep)'),
-            ('sc10', 'Spring Creek 10 (Deep)')]
+            ('sc10', 'Spring Creek 10 (Deep)')]"""
     
     tsRangeEST = ('2003-01-01 00:00:00','2015-01-01 00:00:00' )
     tsRangeUTC = ('2003-01-01 05:00:00','2015-01-01 05:00:00' )

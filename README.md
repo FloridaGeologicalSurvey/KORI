@@ -33,7 +33,7 @@ pandas 0.13.1
     https://pypi.python.org/pypi/pandas/0.13.1/#downloads  
     http://pandas.pydata.org/pandas-docs/version/0.13.1/  
   
-R 3.1.0  
-    http://cran.r-project.org/bin/windows/base/old/3.1.0/  
+R 3.1.2  
+    http://cran.r-project.org/
 
 
