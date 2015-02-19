@@ -52,4 +52,3 @@ def insert_table(data, tableName):
 ad_path = r'C:\GISData\WKP Data\kincaiddb\cumulative_flow_data_AD_200402-201109\cumulative_flow_data.dat'  
 ak_path = r'C:\GISData\WKP Data\kincaiddb\cumulative_flow_data_AK_200402-201109\cumulative_flow_data.dat'
 connection = psycopg2.connect(database="wkp_kincaid", user="postgres", password=pw, host="fgs-usrv")
-        
