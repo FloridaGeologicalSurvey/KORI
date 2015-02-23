@@ -8,6 +8,8 @@
 #' @details
 #' This function transmutes Falmouth data from the long format supplied to by getfalmouth() to a wide format, matrix-like dataframe
 #' The resulting wide format dataframe is useful with functions that require a matrix or matrix-like input. (Correlation matrices, etc.)
+#' Note that it is recommended that this function be used only with the rfalmouth_hourly or rfalmouth_daily view, as differences of minutes or seconds
+#' in the time of observation can result mismatch in the final time series.
 #' 
 #' @param falmouth_dataframe (data frame) A dataframe of the type supplied by the getfalmouth() function
 #' @param pivot_factor (str) the factor to transmute. Must be one of the following: 'aspd', 'avdir', 'cond', 'temp', 'pres'
