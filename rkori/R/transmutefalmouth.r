@@ -1,4 +1,4 @@
-#' @title Transmute Falmouth data from a vector of factors to a data frame of vectors
+#' @title Transmute Falmouth data from a long-format vector of factors to a wide-format data frame of vectors
 #'
 #' @description
 #' \code{transmutefalmouth} Transmute Falmouth from a vector of factors to a data frame of vectors
@@ -6,8 +6,8 @@
 #' @family manipulation functions
 #' 
 #' @details
-#' This function transmutes Falmouth data from the format supplied to by getfalmouth() to a matrix-like dataframe
-#' The resulting dataframe is useful with functions that require a matrix or matrix-like input.
+#' This function transmutes Falmouth data from the long format supplied to by getfalmouth() to a wide format, matrix-like dataframe
+#' The resulting wide format dataframe is useful with functions that require a matrix or matrix-like input. (Correlation matrices, etc.)
 #' 
 #' @param falmouth_dataframe (data frame) A dataframe of the type supplied by the getfalmouth() function
 #' @param pivot_factor (str) the factor to transmute. Must be one of the following: 'aspd', 'avdir', 'cond', 'temp', 'pres'

@@ -2,7 +2,7 @@
 % Please edit documentation in R/transmutefalmouth.r
 \name{transmutefalmouth}
 \alias{transmutefalmouth}
-\title{Transmute Falmouth data from a vector of factors to a data frame of vectors}
+\title{Transmute Falmouth data from a long-format vector of factors to a wide-format data frame of vectors}
 \usage{
 transmutefalmouth(falmouth_dataframe, pivot_factor)
 }
@@ -18,8 +18,8 @@ A matrix-like data frame
 \code{transmutefalmouth} Transmute Falmouth from a vector of factors to a data frame of vectors
 }
 \details{
-This function transmutes Falmouth data from the format supplied to by getfalmouth() to a matrix-like dataframe
-The resulting dataframe is useful with functions that require a matrix or matrix-like input.
+This function transmutes Falmouth data from the long format supplied to by getfalmouth() to a wide format, matrix-like dataframe
+The resulting wide format dataframe is useful with functions that require a matrix or matrix-like input. (Correlation matrices, etc.)
 }
 \examples{
 require(RPostgreSQL)
