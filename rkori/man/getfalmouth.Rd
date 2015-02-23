@@ -27,6 +27,7 @@ always be run before querying the database.
 }
 \examples{
 <<<<<<< HEAD
+<<<<<<< HEAD
 library(RPostgreSQL)
 library(ggplot2)
 
@@ -34,6 +35,11 @@ library(ggplot2)
 #replace the below line with your connection information
 #db <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
 f <- getfalmouth(db, "2012-11-01 00:00:00", "2012-12-01 00:00:00")
+=======
+require(RPostgreSQL)
+con <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
+f <- getfalmouth(con, "2012-11-01 00:00:00", "2012-12-01 00:00:00")
+>>>>>>> parent of 27c03ab... Modify rkori
 =======
 require(RPostgreSQL)
 con <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")

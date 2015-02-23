@@ -14,9 +14,9 @@
 #' @param database_connection An RPostgreSQL connection object
 #' @param start_timestamp (str) A starting timestamp in the form 'YYYY-MM-DD 00:00:00'
 #' @param end_timestamp (str) A starting timestamp in the form 'YYYY-MM-DD 00:00:00'
+#' @param dataset (str) A valid view from the database. Valid views are "rfalmouth", "rfalmouth_hourly", and "rfalmouth_daily"
 #' @return A dataframe for the period [start_timestamp, end_timestamp)
 #' @examples
-<<<<<<< HEAD
 #' library(RPostgreSQL)
 #' library(ggplot2)
 #'
@@ -24,24 +24,25 @@
 #' #replace the below line with your connection information
 #' #db <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
 #' f <- getfalmouth(db, "2012-11-01 00:00:00", "2012-12-01 00:00:00")
-=======
-#' require(RPostgreSQL)
-#' con <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
-#' f <- getfalmouth(con, "2012-11-01 00:00:00", "2012-12-01 00:00:00")
->>>>>>> parent of 27c03ab... Modify rkori
 #' qplot(data=f, x=date_time, y=val, colour=site_name) + 
 #'      facet_wrap(site_name~var, scales="free_y", nrow=length(levels(f$site_name)), ncol=length(levels(f$var)))
+#' 
+#' #plot hourly data using ggplot
+#' fal.hourly <- getfalmouth(db, "2012-11-01 00:00:00", "2012-12-01 00:00:00", dataset="rfalmouth_hourly")
+#' p.hourly <- ggplot(fal.hourly, aes(x=date_time, y=val, colour=as.factor(site_name)))
+#' p.hourly + geom_point(size=0.25, alpha=1/3) + facet_grid(var~., scales="free_y")
 #' @name getfalmouth
 
 
 
 
-getfalmouth <- function(database_connection, start_timestamp, end_timestamp) {
+getfalmouth <- function(database_connection, start_timestamp, end_timestamp, dataset="rfalmouth") {
     require(RPostgreSQL)
     #base SQL query
-    sql <- "SELECT * from rfalmouth WHERE date_time >= \'STARTDATE\' AND date_time < \'ENDDATE\' ORDER BY (date_time, site_name);"
+    sql <- "SELECT * from DATASET WHERE date_time >= \'STARTDATE\' AND date_time < \'ENDDATE\' ORDER BY (date_time, site_name);"
     
     #Sub start and end timestamps
+    sql <- gsub("DATASET", dataset, sql)
     sql <- gsub("STARTDATE", start_timestamp, sql)
     sql <- gsub("ENDDATE", end_timestamp, sql)
     
