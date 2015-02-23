@@ -25,7 +25,8 @@ in the time of observation can result mismatch in the final time series.
 }
 \examples{
 require(RPostgreSQL)
-db <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
+#replace the below line with your connection information
+#db <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
 fal.hourly <- getfalmouth(db, '2012-06-01 00:00:00', '2012-12-01 00:00:00', dataset="rfalmouth_hourly")
 head(fal.hourly)
 str(fal.hourly)
