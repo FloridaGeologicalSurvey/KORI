@@ -16,15 +16,18 @@
 #' @return A matrix-like data frame
 #' @examples
 #' require(RPostgreSQL)
-#' con <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
-#' fal <- getfalmouth(con, "2012-06-01 00:00:00", "2012-12-01 00:00:00")
-#' head(fal)
-#' str(fal)
-#' fal2 <- transmutefalmouth(f, "aspd")
-#' head(fal2)
-#' str(fal2)
-#' plot(dfal[,seq(2, length(dfal))], pch=20)
-
+#' db <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
+#' fal.hourly <- getfalmouth(db, '2012-06-01 00:00:00', '2012-12-01 00:00:00', dataset="rfalmouth_hourly")
+#' head(fal.hourly)
+#' str(fal.hourly)
+#' hourly.aspd <- transmutefalmouth(fal.hourly, "aspd")
+#' head(hourly.aspd)
+#' str(hourly.aspd)
+#' plot(hourly.aspd[,seq(2, length(hourly.aspd))], pch=20)
+#' 
+#' #correlation matrix
+#' cor(hourly.aspd[,seq(2, length(hourly.aspd))], use="pairwise.complete.obs")
+#' heatmap(cor(hourly.aspd[,seq(2, length(hourly.aspd))], use="pairwise.complete.obs"),  col = cm.colors(256), symm=T, margins=c(12,12))
 #' @name transmutefalmouth
 
 transmutefalmouth <- function(falmouth_dataframe, pivot_factor) {
