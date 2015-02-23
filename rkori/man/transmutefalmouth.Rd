@@ -20,11 +20,10 @@ A matrix-like data frame
 \details{
 This function transmutes Falmouth data from the long format supplied to by getfalmouth() to a wide format, matrix-like dataframe
 The resulting wide format dataframe is useful with functions that require a matrix or matrix-like input. (Correlation matrices, etc.)
-Note that it is recommended that this function be used only with the rfalmouth_hourly or rfalmouth_daily view, as differences of minutes or seconds
-in the time of observation can result mismatch in the final time series.
 }
 \examples{
 require(RPostgreSQL)
+<<<<<<< HEAD
 #replace the below line with your connection information
 #db <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
 fal.hourly <- getfalmouth(db, '2012-06-01 00:00:00', '2012-12-01 00:00:00', dataset="rfalmouth_hourly")
@@ -38,6 +37,16 @@ plot(hourly.aspd[,seq(2, length(hourly.aspd))], pch=20)
 #correlation matrix
 cor(hourly.aspd[,seq(2, length(hourly.aspd))], use="pairwise.complete.obs")
 heatmap(cor(hourly.aspd[,seq(2, length(hourly.aspd))], use="pairwise.complete.obs"),  col = cm.colors(256), symm=T, margins=c(12,12))
+=======
+con <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
+fal <- getfalmouth(con, "2012-06-01 00:00:00", "2012-12-01 00:00:00")
+head(fal)
+str(fal)
+fal2 <- transmutefalmouth(f, "aspd")
+head(fal2)
+str(fal2)
+plot(dfal[,seq(2, length(dfal))], pch=20)
+>>>>>>> parent of 27c03ab... Modify rkori
 }
 \seealso{
 Other res: \code{\link{getfalmouth}};

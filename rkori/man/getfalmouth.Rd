@@ -4,8 +4,7 @@
 \alias{getfalmouth}
 \title{Get Falmouth data from the database}
 \usage{
-getfalmouth(database_connection, start_timestamp, end_timestamp,
-  dataset = "rfalmouth")
+getfalmouth(database_connection, start_timestamp, end_timestamp)
 }
 \arguments{
 \item{database_connection}{An RPostgreSQL connection object}
@@ -13,8 +12,6 @@ getfalmouth(database_connection, start_timestamp, end_timestamp,
 \item{start_timestamp}{(str) A starting timestamp in the form 'YYYY-MM-DD 00:00:00'}
 
 \item{end_timestamp}{(str) A starting timestamp in the form 'YYYY-MM-DD 00:00:00'}
-
-\item{dataset}{(str) A valid view from the database. Valid views are "rfalmouth", "rfalmouth_hourly", and "rfalmouth_daily"}
 }
 \value{
 A dataframe for the period [start_timestamp, end_timestamp)
@@ -29,6 +26,7 @@ And the database view rfalmouth must be present. Note that the command 'Sys.sete
 always be run before querying the database.
 }
 \examples{
+<<<<<<< HEAD
 library(RPostgreSQL)
 library(ggplot2)
 
@@ -36,13 +34,13 @@ library(ggplot2)
 #replace the below line with your connection information
 #db <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
 f <- getfalmouth(db, "2012-11-01 00:00:00", "2012-12-01 00:00:00")
+=======
+require(RPostgreSQL)
+con <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
+f <- getfalmouth(con, "2012-11-01 00:00:00", "2012-12-01 00:00:00")
+>>>>>>> parent of 27c03ab... Modify rkori
 qplot(data=f, x=date_time, y=val, colour=site_name) +
      facet_wrap(site_name~var, scales="free_y", nrow=length(levels(f$site_name)), ncol=length(levels(f$var)))
-
-#plot hourly data using ggplot
-fal.hourly <- getfalmouth(db, "2012-11-01 00:00:00", "2012-12-01 00:00:00", dataset="rfalmouth_hourly")
-p.hourly <- ggplot(fal.hourly, aes(x=date_time, y=val, colour=as.factor(site_name)))
-p.hourly + geom_point(size=0.25, alpha=1/3) + facet_grid(var~., scales="free_y")
 }
 \seealso{
 Other res: \code{\link{matplotfalmouth}};
