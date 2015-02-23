@@ -21,7 +21,8 @@
 #' library(ggplot2)
 #'
 #' #plot full resolution data using qplot
-#' db <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
+#' #replace the below line with your connection information
+#' #db <- dbConnect(PostgreSQL(), host="localhost", user="wkp_user", password="wkp_user", dbname="wkp_hrdb")
 #' f <- getfalmouth(db, "2012-11-01 00:00:00", "2012-12-01 00:00:00")
 #' qplot(data=f, x=date_time, y=val, colour=site_name) + 
 #'      facet_wrap(site_name~var, scales="free_y", nrow=length(levels(f$site_name)), ncol=length(levels(f$var)))
