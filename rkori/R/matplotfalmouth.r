@@ -43,7 +43,7 @@ matplotfalmouth <- function(falmouth, scale_type="free_y", point_size=1) {
         geom_point(alpha=1/5, size=point_size) +
         fwrap + 
         xlab("") + ylab("") +
-        scale_color_discrete(name="Site Name") +
+        scale_color_discrete(name="Variable") +
         ggtitle(base_title) + 
         guides(colour = guide_legend(override.aes = list(size=4, alpha=1)))
     }
