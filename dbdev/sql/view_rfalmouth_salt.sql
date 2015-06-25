@@ -31,7 +31,7 @@ CREATE OR REPLACE VIEW rfalmouth_salt AS
             WHERE f.salt IS NOT NULL)
         ORDER BY date_time, var, site_name;
 
-ALTER TABLE rfalmouth_salt;
+ALTER TABLE rfalmouth_salt
   OWNER TO postgres;
 GRANT ALL ON TABLE rfalmouth_salt TO postgres;
 GRANT SELECT ON TABLE rfalmouth_salt TO wkp_user;
