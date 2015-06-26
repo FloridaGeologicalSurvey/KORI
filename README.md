@@ -1,6 +1,6 @@
 Readme for the FGS Karst Open Research Initiative  
 
-Updated 2015-06-26 Message from Seth (developer & maintainer of the KORI repository and all around nice guy):
+Updated 2015-06-26 Message from Seth (developer & maintainer of the KORI repository and all around nice guy):  
 I am in the process of substantially revising the wiki in preparation for a few performance measurables that are due next week. The focus is on creating a user guide and tutorials for the database itself and the rkori package for R 3.1.2. Expect substantial revisions and additions to these sections of the wiki over the next few days, with smaller additions coming in the next weeks.
 
 In data news, the current copy of the database on the FTP is my _dev version that includes a fair amount of the insitu surface sensor data. As of 2015-06-24, the insitu and insitu_wle tables should be treated with a high degree of caution: I'm only about halfway through loading the insitu data and have not had a chance to check the values in the database against the values in the raw files. The calculated WLE's use the average daily barometric pressure from the Tallahassee airport; I'm still waiting on Scott to cross check these values.
