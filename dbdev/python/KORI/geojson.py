@@ -15,7 +15,7 @@ def symbologize(path, symbolDictionary):
     for row in data['features'][:]:
         for item in symbolDictionary.iteritems():
             if item[1]:
-                row[item[0]] = item[1]
+                row['properties'][item[0]] = item[1]
     
     return data
       
@@ -44,6 +44,6 @@ if __name__ == '__main__':
     
     sdict = get_symbol_dictionary()
     sdict['marker-size'] = 'small'
-    sdict['marker-symbol'] = 'square'
-    sdict['marker-color'] = '3333FF'
+    sdict['marker-symbol'] = 'triangle'
+    sdict['marker-color'] = '#CC0099'
     write_json(symbologize(inFile, sdict), outFile)
