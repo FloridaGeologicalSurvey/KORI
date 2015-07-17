@@ -32,8 +32,9 @@ library(RColorBrewer)
 
 
 ########## END LIBRARY IMPORTS    ############# 
-
-db <- dbConnect(PostgreSQL(), db='wkp_hrdb_dev', host='FGS-USRV', user='postgres', password='incorrectLitho')
+#set password manually
+pw = ''
+db <- dbConnect(PostgreSQL(), db='wkp_hrdb_dev', host='FGS-USRV', user='postgres', password=pw)
 
 #query
 insitu <- dbGetQuery(db, "SELECT * from analysis.insitu_salt_hourly WHERE elev_ft > 0 AND date_time >= \'2009-01-01 00:00:00\' AND date_time <\'2014-01-01 00:00:00\' AND site_name != \'St. Marks River Rise (Surface)\';")
