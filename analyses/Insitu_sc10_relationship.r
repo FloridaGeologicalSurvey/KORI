@@ -9,8 +9,7 @@
 
 #establish database connection
 library(RPostgreSQL)
-db <- dbConnect(PostgreSQL(), db='wkp_hrdb_dev', host='FGS-USRV', user='postgres', password='incorrectLitho')
-#db <- dbConnect(PostgreSQL(), db='wkp_hrdb', host='localhost', user='postgres', password='incorrectLitho')
+
 
 #load rkori package
 library(rkori)
@@ -19,7 +18,6 @@ setwd("c:/rdata")
 #set system environment in R to the proper time zone
 #this should be run every single R session
 Sys.setenv(TZ='UTC')
-setwd("C:/rdata")
 ########  END BLOCK ########
 
 ########## LIBRARY IMPORTS FOR THIS CODEBLOCK #######
@@ -29,12 +27,16 @@ require(gridExtra)
 library(lubridate)
 library(scales)
 library(RColorBrewer)
+library(Rcpp)
+library(plyr)
+library(d3heatmap)
+
 
 
 ########## END LIBRARY IMPORTS    ############# 
 #set password manually
 pw = ''
-db <- dbConnect(PostgreSQL(), db='wkp_hrdb_dev', host='FGS-USRV', user='postgres', password=pw)
+db <- dbConnect(PostgreSQL(), db='wkp_hrdb_dev', host='FGS-USRV', user='wkp_user', password=pw)
 
 #query
 insitu <- dbGetQuery(db, "SELECT * from analysis.insitu_salt_hourly WHERE elev_ft > 0 AND date_time >= \'2009-01-01 00:00:00\' AND date_time <\'2014-01-01 00:00:00\' AND site_name != \'St. Marks River Rise (Surface)\';")
@@ -53,12 +55,12 @@ cols <- c("lightblue","orange","pink","red1")
 png("Insitu WLE coloured by SC10 salinity, Hourly Averages 2009-2013.png", width = 12000, height=6000, res=600)
 p <- ggplot(insitu, aes(x=date_time, y=elev_ft, colour=fac))
 p + theme_bw() + 
-    geom_point(size=0.25, alpha=1/3) + 
+    geom_point(size=0.5, alpha=1/3) + 
     facet_grid(site_name~.) + 
     ggtitle("Insitu Water Level Elevations\nColoured by SC10 salinity\nHourly Averages, 2009-2013") + 
     ylab("Water Level Elevation (Ft.)") + 
     xlab("Timestamp (UTC)") + 
-    scale_x_datetime(breaks="1 months") + 
+    scale_x_datetime(breaks="2 months") + 
     scale_y_continuous(breaks=seq(0,20,1)) + 
     scale_colour_manual(values =cols, name="Salinity\n(PSU)") +
     guides(colour=guide_legend(override.aes = list(size=4, alpha=1))) +
